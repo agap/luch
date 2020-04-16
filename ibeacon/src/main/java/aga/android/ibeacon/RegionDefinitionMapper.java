@@ -1,14 +1,18 @@
 package aga.android.ibeacon;
 
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import static aga.android.ibeacon.Conversions.byteArrayToUuidString;
 import static aga.android.ibeacon.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOfRange;
 
 class RegionDefinitionMapper {
 
@@ -64,5 +68,25 @@ class RegionDefinitionMapper {
                 MASK
             )
             .build();
+    }
+
+    @Nullable
+    static Beacon asBeacon(@NonNull ScanResult scanResult) {
+        if (scanResult.getScanRecord() == null) {
+            return null;
+        }
+
+        final byte[] manufacturerData = scanResult
+            .getScanRecord()
+            .getManufacturerSpecificData(MANUFACTURER_ID);
+
+        if (manufacturerData == null || manufacturerData.length != MANUFACTURER_DATA_LENGTH) {
+            return null;
+        }
+
+        final String proximityUuid = byteArrayToUuidString(copyOfRange(manufacturerData, 2, 18));
+
+        // todo parse major and minor
+        return new Beacon(proximityUuid, 0, 0);
     }
 }

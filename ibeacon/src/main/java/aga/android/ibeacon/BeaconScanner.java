@@ -1,7 +1,6 @@
 package aga.android.ibeacon;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 
@@ -20,19 +19,23 @@ public class BeaconScanner implements IScanner {
     @NonNull
     private final BluetoothAdapter bluetoothAdapter;
 
-    private final ScanCallback scanCallback;
+    @NonNull
+    private final BeaconScanCallback scanCallback = new BeaconScanCallback();
 
     @NonNull
     private List<ScanFilter> scanFilters = Collections.emptyList();
 
     public BeaconScanner() {
-        scanCallback = new BeaconScanCallback();
-
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (bluetoothAdapter == null) {
             throw new IllegalStateException("Bluetooth is not accessible on that device");
         }
+    }
+
+    @Override
+    public void setBeaconListener(IBeaconListener listener) {
+        scanCallback.setListener(listener);
     }
 
     @Override
@@ -56,5 +59,9 @@ public class BeaconScanner implements IScanner {
         bluetoothAdapter
             .getBluetoothLeScanner()
             .stopScan(scanCallback);
+
+        //todo I don't like it at all; looks like BeaconScanner and BeaconScanCallback
+        // _should be_ merged into one
+        scanCallback.stop();
     }
 }
