@@ -9,6 +9,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static aga.android.ibeacon.Conversions.byteArrayToInteger;
 import static aga.android.ibeacon.Conversions.byteArrayToUuidString;
 import static aga.android.ibeacon.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
@@ -85,8 +86,13 @@ class RegionDefinitionMapper {
         }
 
         final String proximityUuid = byteArrayToUuidString(copyOfRange(manufacturerData, 2, 18));
+        final int major = byteArrayToInteger(copyOfRange(manufacturerData, 18, 20));
+        final int minor = byteArrayToInteger(copyOfRange(manufacturerData, 20, 22));
 
-        // todo parse major and minor
-        return new Beacon(proximityUuid, 0, 0);
+        return new Beacon(
+            proximityUuid,
+            major,
+            minor
+        );
     }
 }
