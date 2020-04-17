@@ -8,10 +8,17 @@ import aga.android.ibeacon.demo.databinding.ActivityMainBinding
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), IBeaconListener {
 
-    private val scanner: IScanner = BeaconScanner()
+    private val scanner: IScanner by lazy {
+        BeaconScanner.Builder()
+            .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(2))
+            .setBeaconListener(this)
+            .setRegionDefinitions(RegionsDefinitionSource.getDefinitions(this))
+            .build()
+    }
 
     private lateinit var binding: ActivityMainBinding
 
@@ -24,9 +31,6 @@ class MainActivity : AppCompatActivity(), IBeaconListener {
         setContentView(binding.root)
 
         binding.beaconsList.adapter = adapter
-
-        scanner.setRegionDefinitions(RegionsDefinitionSource.getDefinitions(this));
-        scanner.setBeaconListener(this)
     }
 
     override fun onResume() {

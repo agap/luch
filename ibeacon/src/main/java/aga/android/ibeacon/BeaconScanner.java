@@ -35,8 +35,83 @@ public class BeaconScanner implements IScanner {
     @NonNull
     private final BeaconScanCallback scanCallback = new BeaconScanCallback();
 
-    // todo make it possible to change this value
-    private final long beaconEvictionTimeMillis = TimeUnit.SECONDS.toMillis(5);
+    @Nullable
+    private IBeaconListener beaconListener = null;
+
+    @NonNull
+    private final Handler handler = new Handler();
+
+    @NonNull
+    private final Map<Beacon, Long> nearbyBeacons = new HashMap<>();
+
+    private long beaconEvictionTimeMillis;
+
+    @NonNull
+    private List<ScanFilter> scanFilters = Collections.emptyList();
+
+    private BeaconScanner() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (bluetoothAdapter == null) {
+            throw new IllegalStateException("Bluetooth is not accessible on that device");
+        }
+    }
+
+    @Override
+    public void start() {
+        bluetoothAdapter
+            .getBluetoothLeScanner()
+            .startScan(
+                scanFilters,
+                SCAN_SETTINGS,
+                scanCallback
+            );
+
+        handler.postDelayed(beaconEvictionTask, beaconEvictionTimeMillis);
+    }
+
+    @Override
+    public void stop() {
+        bluetoothAdapter
+            .getBluetoothLeScanner()
+            .stopScan(scanCallback);
+
+        handler.removeCallbacksAndMessages(null);
+    }
+
+    public static final class Builder {
+
+        private IBeaconListener listener = null;
+
+        private List<RegionDefinition> definitions;
+
+        private long beaconEvictionTimeMillis = TimeUnit.SECONDS.toMillis(5);
+
+        public Builder setBeaconListener(IBeaconListener listener) {
+            this.listener = listener;
+            return this;
+        }
+
+        public Builder setRegionDefinitions(List<RegionDefinition> definitions) {
+            this.definitions = definitions;
+            return this;
+        }
+
+        public Builder setBeaconEvictionTime(long millis) {
+            this.beaconEvictionTimeMillis = millis;
+            return this;
+        }
+
+        public BeaconScanner build() {
+            final BeaconScanner scanner = new BeaconScanner();
+
+            scanner.beaconEvictionTimeMillis = beaconEvictionTimeMillis;
+            scanner.beaconListener = listener;
+            scanner.scanFilters = RegionDefinitionMapper.asScanFilters(definitions);
+
+            return scanner;
+        }
+    }
 
     private final Runnable beaconEvictionTask = new Runnable() {
         @Override
@@ -67,56 +142,6 @@ public class BeaconScanner implements IScanner {
             handler.postDelayed(this, beaconEvictionTimeMillis);
         }
     };
-
-    @Nullable
-    private IBeaconListener beaconListener = null;
-
-    private final Handler handler = new Handler();
-
-    private final Map<Beacon, Long> nearbyBeacons = new HashMap<>();
-
-    @NonNull
-    private List<ScanFilter> scanFilters = Collections.emptyList();
-
-    public BeaconScanner() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (bluetoothAdapter == null) {
-            throw new IllegalStateException("Bluetooth is not accessible on that device");
-        }
-    }
-
-    @Override
-    public void setBeaconListener(@NonNull IBeaconListener listener) {
-        beaconListener = listener;
-    }
-
-    @Override
-    public void setRegionDefinitions(List<RegionDefinition> definitions) {
-        scanFilters = RegionDefinitionMapper.asScanFilters(definitions);
-    }
-
-    @Override
-    public void start() {
-        bluetoothAdapter
-            .getBluetoothLeScanner()
-            .startScan(
-                scanFilters,
-                SCAN_SETTINGS,
-                scanCallback
-            );
-
-        handler.postDelayed(beaconEvictionTask, beaconEvictionTimeMillis);
-    }
-
-    @Override
-    public void stop() {
-        bluetoothAdapter
-            .getBluetoothLeScanner()
-            .stopScan(scanCallback);
-
-        handler.removeCallbacksAndMessages(null);
-    }
 
     private final class BeaconScanCallback extends ScanCallback {
 
