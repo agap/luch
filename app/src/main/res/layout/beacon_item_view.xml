@@ -1,38 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="10dp"
+    android:elevation="10dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:text="@string/beacon_item_title"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/beacon_item_uuid"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="12f5b9ec-0117-11ea-7755-9A724ce82dd8"/>
+        android:background="@color/colorCard"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/beacon_item_major"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        tools:text="Major: 65000"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="@string/beacon_item_title"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/beacon_item_minor"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:text="Minor: 120"/>
+        <TextView
+            android:id="@+id/beacon_item_uuid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="12f5b9ec-0117-11ea-7755-9A724ce82dd8"/>
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/beacon_item_major"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            tools:text="Major: 65000"/>
+
+        <TextView
+            android:id="@+id/beacon_item_minor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Minor: 120"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

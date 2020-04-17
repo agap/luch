@@ -10,7 +10,9 @@
         android:id="@+id/beacons_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingTop="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 </FrameLayout>
