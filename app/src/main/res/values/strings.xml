@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Simple iBeacon</string>
+    <string name="sorry_no_beacons">Sorry, no beacons :(</string>
+    <string name="beacon_item_title">Beacon:</string>
+
+    <string name="beacon_major">Major: %d</string>
+    <string name="beacon_minor">Minor: %d</string>
 </resources>
