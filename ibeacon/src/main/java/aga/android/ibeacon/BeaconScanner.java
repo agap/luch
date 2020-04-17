@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import java.util.Collections;
@@ -21,10 +22,15 @@ import androidx.annotation.Nullable;
 import static android.os.SystemClock.elapsedRealtime;
 
 // todo make package private
-public class BeaconScanner implements IScanner {
+public class BeaconScanner implements IScanner, Handler.Callback {
 
     private static final String TAG = "BeaconScanner";
 
+    private static final int MESSAGE_RESUME_SCANS = 1;
+    private static final int MESSAGE_PAUSE_SCANS = 2;
+    private static final int MESSAGE_STOP_SCANS = 3;
+    private static final int MESSAGE_EVICT_OUTDATED_BEACONS = 4;
+    
     private static final ScanSettings SCAN_SETTINGS = new ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
         .build();
@@ -39,12 +45,15 @@ public class BeaconScanner implements IScanner {
     private IBeaconListener beaconListener = null;
 
     @NonNull
-    private final Handler handler = new Handler();
+    private final Handler handler;
 
     @NonNull
     private final Map<Beacon, Long> nearbyBeacons = new HashMap<>();
 
-    private long beaconEvictionTimeMillis;
+    private long beaconEvictionPeriodicityMillis;
+
+    private long scanDurationMillis;
+    private long restDurationMillis;
 
     @NonNull
     private List<ScanFilter> scanFilters = Collections.emptyList();
@@ -55,10 +64,84 @@ public class BeaconScanner implements IScanner {
         if (bluetoothAdapter == null) {
             throw new IllegalStateException("Bluetooth is not accessible on that device");
         }
+
+        handler = new Handler(this);
     }
 
     @Override
     public void start() {
+        handler.sendMessage(
+            handler.obtainMessage(MESSAGE_RESUME_SCANS)
+        );
+
+        handler.sendMessageDelayed(
+            handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
+            beaconEvictionPeriodicityMillis
+        );
+    }
+
+    @Override
+    public void stop() {
+       handler.sendMessageAtFrontOfQueue(
+           handler.obtainMessage(MESSAGE_STOP_SCANS)
+       );
+    }
+
+    @Override
+    public boolean handleMessage(@NonNull Message msg) {
+        switch (msg.what) {
+            case MESSAGE_RESUME_SCANS:
+                Log.d(TAG, "BLE scans resumed...");
+
+                startScans();
+
+                handler.sendMessageDelayed(
+                    handler.obtainMessage(MESSAGE_PAUSE_SCANS),
+                    scanDurationMillis
+                );
+
+                break;
+
+            case MESSAGE_PAUSE_SCANS:
+                Log.d(TAG, "BLE scans paused...");
+
+                stopScans();
+
+                handler.sendMessageDelayed(
+                    handler.obtainMessage(MESSAGE_RESUME_SCANS),
+                    restDurationMillis
+                );
+
+                break;
+
+            case MESSAGE_STOP_SCANS:
+                Log.d(TAG, "BLE scans stopped");
+
+                stopScans();
+
+                handler.removeCallbacksAndMessages(null);
+
+                break;
+
+            case MESSAGE_EVICT_OUTDATED_BEACONS:
+                Log.d(TAG, "Beacons eviction started");
+
+                evictOutdatedBeacons();
+
+                Log.d(TAG, "Beacons eviction completed");
+
+                handler.sendMessageDelayed(
+                    handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
+                    beaconEvictionPeriodicityMillis
+                );
+
+                break;
+        }
+
+        return true;
+    }
+
+    private void startScans() {
         bluetoothAdapter
             .getBluetoothLeScanner()
             .startScan(
@@ -66,17 +149,31 @@ public class BeaconScanner implements IScanner {
                 SCAN_SETTINGS,
                 scanCallback
             );
-
-        handler.postDelayed(beaconEvictionTask, beaconEvictionTimeMillis);
     }
 
-    @Override
-    public void stop() {
+    private void stopScans() {
         bluetoothAdapter
             .getBluetoothLeScanner()
             .stopScan(scanCallback);
+    }
 
-        handler.removeCallbacksAndMessages(null);
+    private void evictOutdatedBeacons() {
+        final Iterator<Beacon> iterator = nearbyBeacons.keySet().iterator();
+
+        for (; iterator.hasNext(); ) {
+            final Beacon inMemoryBeacon = iterator.next();
+            final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
+
+            if (lastAppearanceMillis != null
+                    && elapsedRealtime() - lastAppearanceMillis > beaconEvictionPeriodicityMillis) {
+
+                iterator.remove();
+            }
+        }
+
+        if (beaconListener != null) {
+            beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
+        }
     }
 
     public static final class Builder {
@@ -85,7 +182,10 @@ public class BeaconScanner implements IScanner {
 
         private List<RegionDefinition> definitions;
 
-        private long beaconEvictionTimeMillis = TimeUnit.SECONDS.toMillis(5);
+        private long beaconEvictionPeriodicityMillis = TimeUnit.SECONDS.toMillis(5);
+
+        private long scanDurationMillis = 100;
+        private long restDurationMillis = 1_000;
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
@@ -98,50 +198,32 @@ public class BeaconScanner implements IScanner {
         }
 
         public Builder setBeaconEvictionTime(long millis) {
-            this.beaconEvictionTimeMillis = millis;
+            this.beaconEvictionPeriodicityMillis = millis;
+            return this;
+        }
+
+        public Builder setScanDuration(long millis) {
+            this.scanDurationMillis = millis;
+            return this;
+        }
+
+        public Builder setRestDuration(long millis) {
+            this.restDurationMillis = millis;
             return this;
         }
 
         public BeaconScanner build() {
             final BeaconScanner scanner = new BeaconScanner();
 
-            scanner.beaconEvictionTimeMillis = beaconEvictionTimeMillis;
+            scanner.beaconEvictionPeriodicityMillis = beaconEvictionPeriodicityMillis;
+            scanner.scanDurationMillis = scanDurationMillis;
+            scanner.restDurationMillis = restDurationMillis;
             scanner.beaconListener = listener;
             scanner.scanFilters = RegionDefinitionMapper.asScanFilters(definitions);
 
             return scanner;
         }
     }
-
-    private final Runnable beaconEvictionTask = new Runnable() {
-        @Override
-        public void run() {
-            Log.d(TAG, "Running the beacon eviction task");
-
-            final Iterator<Beacon> iterator = nearbyBeacons.keySet().iterator();
-
-            for (; iterator.hasNext(); ) {
-                final Beacon inMemoryBeacon = iterator.next();
-                final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
-
-                Log.d(TAG, "Elapsed real time is: " + elapsedRealtime() +
-                        "; last appearance time is: " + lastAppearanceMillis +
-                        "; eviction period is: " + beaconEvictionTimeMillis);
-
-                if (lastAppearanceMillis != null
-                        && elapsedRealtime() - lastAppearanceMillis > beaconEvictionTimeMillis) {
-
-                    iterator.remove();
-                }
-            }
-
-            if (beaconListener != null) {
-                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
-            }
-
-            handler.postDelayed(this, beaconEvictionTimeMillis);
-        }
-    };
 
     private final class BeaconScanCallback extends ScanCallback {
 

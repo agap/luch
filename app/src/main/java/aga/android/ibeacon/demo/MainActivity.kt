@@ -14,7 +14,9 @@ class MainActivity : AppCompatActivity(), IBeaconListener {
 
     private val scanner: IScanner by lazy {
         BeaconScanner.Builder()
-            .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(2))
+            .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(5))
+            .setScanDuration(500)
+            .setRestDuration(TimeUnit.SECONDS.toMillis(1))
             .setBeaconListener(this)
             .setRegionDefinitions(RegionsDefinitionSource.getDefinitions(this))
             .build()
