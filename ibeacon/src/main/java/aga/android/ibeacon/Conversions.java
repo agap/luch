@@ -54,7 +54,14 @@ class Conversions {
         return TextUtils.join("", hexChars);
     }
 
-    public static int byteArrayToInteger(@NonNull @Size(min = 2, max = 2) byte[] byteArray) {
+    static int byteArrayToInteger(@NonNull @Size(min = 2, max = 2) byte[] byteArray) {
         return (byteArray[0] & 0xff) * 0x100 + (byteArray[1] & 0xff);
+    }
+
+    static byte[] integerToByteArray(int value) {
+        return new byte[] {
+            (byte) (value / 256),
+            (byte) (value % 256)
+        };
     }
 }
