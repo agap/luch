@@ -13,7 +13,7 @@ public class Beacon {
 
     private final int minor;
 
-    public Beacon(@NonNull String uuid, int major, int minor) {
+    Beacon(@NonNull String uuid, int major, int minor) {
         this.uuid = uuid;
         this.major = major;
         this.minor = minor;

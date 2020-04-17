@@ -25,17 +25,17 @@ public class RegionDefinition {
     }
 
     @NonNull
-    public String getUuid() {
+    String getUuid() {
         return uuid;
     }
 
     @Nullable
-    public Integer getMajor() {
+    Integer getMajor() {
         return major;
     }
 
     @Nullable
-    public Integer getMinor() {
+    Integer getMinor() {
         return minor;
     }
 }
