@@ -9,19 +9,35 @@ public class Beacon {
     @NonNull
     private final String uuid;
 
+    @NonNull
+    private final String hardwareAddress;
+
     private final int major;
 
     private final int minor;
 
-    Beacon(@NonNull String uuid, int major, int minor) {
+    private final int rssi;
+
+    Beacon(@NonNull String uuid,
+           @NonNull String hardwareAddress,
+           int major,
+           int minor,
+           int rssi) {
         this.uuid = uuid;
+        this.hardwareAddress = hardwareAddress;
         this.major = major;
         this.minor = minor;
+        this.rssi = rssi;
     }
 
     @NonNull
     public String getUuid() {
         return uuid;
+    }
+
+    @NonNull
+    public String getHardwareAddress() {
+        return hardwareAddress;
     }
 
     public int getMajor() {
@@ -30,6 +46,10 @@ public class Beacon {
 
     public int getMinor() {
         return minor;
+    }
+
+    public int getRssi() {
+        return rssi;
     }
 
     @Override
@@ -51,8 +71,10 @@ public class Beacon {
     public String toString() {
         return "Beacon{" +
                 "uuid='" + uuid + '\'' +
+                ", hardwareAddress='" + hardwareAddress + '\'' +
                 ", major=" + major +
                 ", minor=" + minor +
+                ", rssi=" + rssi +
                 '}';
     }
 }

@@ -129,8 +129,10 @@ class RegionDefinitionMapper {
 
         return new Beacon(
             proximityUuid,
+            scanResult.getDevice().getAddress(),
             major,
-            minor
+            minor,
+            scanResult.getRssi()
         );
     }
 }
