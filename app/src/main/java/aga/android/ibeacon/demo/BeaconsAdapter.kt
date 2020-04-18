@@ -17,10 +17,14 @@ class BeaconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun setBeacon(beacon: Beacon) {
 
         with(binding) {
-            beaconItemUuid.text = beacon.uuid
             val resources = itemView.context.resources
-            beaconItemMajor.text = resources.getString(R.string.beacon_major, beacon.major)
-            beaconItemMinor.text = resources.getString(R.string.beacon_minor, beacon.minor)
+
+            beaconItemUuid.text  = beacon.uuid
+            beaconItemMajor.text = beacon.major.toString()
+            beaconItemMinor.text = beacon.minor.toString()
+            beaconItemRssi.text  = resources.getString(R.string.beacon_rssi_value, beacon.rssi)
+
+            beaconItemAddress.text = beacon.hardwareAddress
         }
     }
 }

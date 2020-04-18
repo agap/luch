@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">Simple iBeacon</string>
     <string name="sorry_no_beacons">Sorry, no beacons :(</string>
-    <string name="beacon_item_title">Beacon:</string>
 
-    <string name="beacon_major">Major: %d</string>
-    <string name="beacon_minor">Minor: %d</string>
+    <string name="beacon_uuid">UUID</string>
+    <string name="beacon_major">Major</string>
+    <string name="beacon_minor">Minor</string>
+    <string name="beacon_rssi">RSSI</string>
+    <string name="beacon_rssi_value">%d dBm</string>
+    <string name="beacon_address">Hardware address</string>
 </resources>
