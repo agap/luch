@@ -5,6 +5,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -31,9 +32,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     private static final int MESSAGE_STOP_SCANS = 3;
     private static final int MESSAGE_EVICT_OUTDATED_BEACONS = 4;
     
-    private static final ScanSettings SCAN_SETTINGS = new ScanSettings.Builder()
-        .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-        .build();
+    private final ScanSettings scanSettings;
 
     @NonNull
     private final BluetoothAdapter bluetoothAdapter;
@@ -64,6 +63,15 @@ public class BeaconScanner implements IScanner, Handler.Callback {
         if (bluetoothAdapter == null) {
             throw new IllegalStateException("Bluetooth is not accessible on that device");
         }
+
+        final ScanSettings.Builder scanSettingsBuilder = new ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            scanSettingsBuilder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+        }
+
+        scanSettings = scanSettingsBuilder.build();
 
         handler = new Handler(this);
     }
@@ -146,7 +154,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             .getBluetoothLeScanner()
             .startScan(
                 scanFilters,
-                SCAN_SETTINGS,
+                scanSettings,
                 scanCallback
             );
     }
@@ -240,11 +248,6 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             if (beaconListener != null) {
                 beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
             }
-        }
-
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            Log.d(TAG, "On batch scan results: " + results);
         }
 
         @Override
