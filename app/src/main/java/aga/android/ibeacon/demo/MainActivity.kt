@@ -1,26 +1,14 @@
 package aga.android.ibeacon.demo
 
-import aga.android.ibeacon.Beacon
-import aga.android.ibeacon.BeaconScanner
-import aga.android.ibeacon.IBeaconListener
-import aga.android.ibeacon.IScanner
+import aga.android.ibeacon.demo.data.BeaconsViewModel
 import aga.android.ibeacon.demo.databinding.ActivityMainBinding
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import java.util.concurrent.TimeUnit
+import androidx.lifecycle.observe
 
-class MainActivity : AppCompatActivity(), IBeaconListener {
-
-    private val scanner: IScanner by lazy {
-        BeaconScanner.Builder()
-            .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(5))
-            .setScanDuration(500)
-            .setRestDuration(TimeUnit.SECONDS.toMillis(1))
-            .setBeaconListener(this)
-            .setRegionDefinitions(RegionsDefinitionSource.getDefinitions(this))
-            .build()
-    }
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -33,19 +21,11 @@ class MainActivity : AppCompatActivity(), IBeaconListener {
         setContentView(binding.root)
 
         binding.beaconsList.adapter = adapter
-    }
 
-    override fun onResume() {
-        super.onResume()
-        scanner.start()
-    }
+        val model: BeaconsViewModel by viewModels()
 
-    override fun onPause() {
-        super.onPause()
-        scanner.stop()
-    }
-
-    override fun onNearbyBeaconsDetected(beacons: Set<Beacon>) {
-        adapter.submitList(beacons.toList())
+        model.beacons.observe(this) { beacons ->
+            adapter.submitList(beacons.toList())
+        }
     }
 }
