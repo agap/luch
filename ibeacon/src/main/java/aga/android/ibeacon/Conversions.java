@@ -47,9 +47,9 @@ class Conversions {
         }
 
         hexChars.add(8, '-');
-        hexChars.add(12, '-');
-        hexChars.add(16, '-');
-        hexChars.add(20, '-');
+        hexChars.add(13, '-');
+        hexChars.add(18, '-');
+        hexChars.add(23, '-');
 
         return TextUtils.join("", hexChars);
     }
