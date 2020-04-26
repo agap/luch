@@ -1,3 +1,5 @@
+![.github/workflows/android.yml](https://github.com/agap/ibeacon/workflows/.github/workflows/android.yml/badge.svg)
+
 # Simple iBeacon
 
 A somewhat simplistic library which aims to do one thing only - monitor nearby iBeacons when the app's in foreground mode. The library is under development, check the demo (`app` module) to see the example.
