@@ -1,10 +1,5 @@
 package aga.android.ibeacon;
 
-import android.text.TextUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
@@ -38,20 +33,20 @@ class Conversions {
     }
 
     static String byteArrayToUuidString(@NonNull @Size(min = 16, max = 16) byte[] uuid) {
-        final List<Character> hexChars = new ArrayList<>(uuid.length * 2 + 4);
+        final StringBuilder stringBuilder = new StringBuilder(uuid.length * 2 + 4);
 
         for (int j = 0; j < uuid.length; j++ ) {
             final int v = uuid[j] & 0xFF;
-            hexChars.add(j * 2, HEX_ARRAY[v >>> 4]);
-            hexChars.add(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
+            stringBuilder.insert(j * 2, HEX_ARRAY[v >>> 4]);
+            stringBuilder.insert(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
         }
+        
+        stringBuilder.insert(8, '-');
+        stringBuilder.insert(13, '-');
+        stringBuilder.insert(18, '-');
+        stringBuilder.insert(23, '-');
 
-        hexChars.add(8, '-');
-        hexChars.add(13, '-');
-        hexChars.add(18, '-');
-        hexChars.add(23, '-');
-
-        return TextUtils.join("", hexChars);
+        return stringBuilder.toString();
     }
 
     static int byteArrayToInteger(@NonNull @Size(min = 2, max = 2) byte[] byteArray) {
