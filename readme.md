@@ -1,4 +1,4 @@
-![.github/workflows/android.yml](https://github.com/agap/ibeacon/workflows/.github/workflows/android.yml/badge.svg)
+![Testing Flow](https://github.com/agap/ibeacon/workflows/Testing%20Flow/badge.svg)
 
 # Simple iBeacon
 
