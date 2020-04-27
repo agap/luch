@@ -67,7 +67,7 @@ class RegionDefinitionMapper {
         return filters;
     }
 
-    private static ScanFilter asScanFilter(@NonNull RegionDefinition regionDefinition) {
+    static ScanFilter asScanFilter(@NonNull RegionDefinition regionDefinition) {
         final byte[] data = new byte[MANUFACTURER_DATA_LENGTH];
 
         arraycopy(
