@@ -1,5 +1,6 @@
 package aga.android.ibeacon.demo
 
+import aga.android.ibeacon.BeaconLogger
 import aga.android.ibeacon.demo.data.BeaconsViewModel
 import aga.android.ibeacon.demo.databinding.ActivityMainBinding
 import android.os.Bundle
@@ -16,6 +17,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        BeaconLogger.setInstance(BeaconLogger.SYSTEM_INSTANCE)
 
         binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)

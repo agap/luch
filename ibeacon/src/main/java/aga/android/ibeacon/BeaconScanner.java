@@ -8,7 +8,6 @@ import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,8 +23,6 @@ import static android.os.SystemClock.elapsedRealtime;
 
 // todo make package private
 public class BeaconScanner implements IScanner, Handler.Callback {
-
-    private static final String TAG = "BeaconScanner";
 
     private static final int MESSAGE_RESUME_SCANS = 1;
     private static final int MESSAGE_PAUSE_SCANS = 2;
@@ -99,7 +96,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     public boolean handleMessage(@NonNull Message msg) {
         switch (msg.what) {
             case MESSAGE_RESUME_SCANS:
-                Log.d(TAG, "BLE scans resumed...");
+                BeaconLogger.d("BLE scans resumed...");
 
                 startScans();
 
@@ -111,7 +108,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
                 break;
 
             case MESSAGE_PAUSE_SCANS:
-                Log.d(TAG, "BLE scans paused...");
+                BeaconLogger.d("BLE scans paused...");
 
                 stopScans();
 
@@ -123,7 +120,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
                 break;
 
             case MESSAGE_STOP_SCANS:
-                Log.d(TAG, "BLE scans stopped");
+                BeaconLogger.d("BLE scans stopped");
 
                 stopScans();
 
@@ -132,11 +129,11 @@ public class BeaconScanner implements IScanner, Handler.Callback {
                 break;
 
             case MESSAGE_EVICT_OUTDATED_BEACONS:
-                Log.d(TAG, "Beacons eviction started");
+                BeaconLogger.d("Beacons eviction started");
 
                 evictOutdatedBeacons();
 
-                Log.d(TAG, "Beacons eviction completed");
+                BeaconLogger.d("Beacons eviction completed");
 
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
@@ -252,7 +249,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
         @Override
         public void onScanFailed(int errorCode) {
-            Log.d(TAG, "On scan failed: " + errorCode);
+            BeaconLogger.d("On scan failed: " + errorCode);
         }
     }
 }
