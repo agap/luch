@@ -1,6 +1,6 @@
-![Testing Flow](https://github.com/agap/ibeacon/workflows/Testing%20Flow/badge.svg)
+![Testing Flow](https://github.com/agap/luch/workflows/Testing%20Flow/badge.svg)
 
-# Simple iBeacon
+# Luch
 
 A somewhat simplistic library which aims to do one thing only - monitor nearby iBeacons when the app's in foreground mode. The library is under development, check the demo (`app` module) to see the example.
 
