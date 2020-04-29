@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Simple iBeacon</string>
+    <string name="app_name">Luch Demo</string>
     <string name="sorry_no_beacons">Sorry, no beacons :(</string>
 
     <string name="beacon_uuid">UUID</string>

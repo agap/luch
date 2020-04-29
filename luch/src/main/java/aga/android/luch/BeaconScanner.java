@@ -1,6 +1,7 @@
 package aga.android.luch;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
@@ -147,8 +148,18 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     }
 
     private void startScans() {
-        bluetoothAdapter
-            .getBluetoothLeScanner()
+        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+        if (bleScanner == null) {
+            BeaconLogger.e(
+                "BluetoothLeScanner is missing, scans will not be started " +
+                    "(check if Bluetooth is turned on)"
+            );
+
+            return;
+        }
+
+        bleScanner
             .startScan(
                 scanFilters,
                 scanSettings,
@@ -157,9 +168,18 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     }
 
     private void stopScans() {
-        bluetoothAdapter
-            .getBluetoothLeScanner()
-            .stopScan(scanCallback);
+        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+        if (bleScanner == null) {
+            BeaconLogger.e(
+                "Can't stop the BLE scans since there is no BluetoothLeScanner available, " +
+                    "most likely the scans weren't started either (check if Bluetooth is turned on)"
+            );
+
+            return;
+        }
+
+        bleScanner.stopScan(scanCallback);
     }
 
     private void evictOutdatedBeacons() {

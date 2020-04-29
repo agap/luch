@@ -20,6 +20,10 @@ public final class BeaconLogger {
         LOGGER.d(message);
     }
 
+    static void e(@NonNull String message) {
+        LOGGER.e(message);
+    }
+
     public static void setInstance(@NonNull Logger logger) {
         LOGGER = logger;
     }
@@ -28,6 +32,8 @@ public final class BeaconLogger {
     public static abstract class Logger {
 
         abstract void d(@NonNull String message);
+
+        abstract void e(@NonNull String message);
     }
 
     private static class EmptyLogger extends Logger {
@@ -40,6 +46,11 @@ public final class BeaconLogger {
         public void d(@NonNull String message) {
             // nothing to do here, I'm a dummy logger
         }
+
+        @Override
+        void e(@NonNull String message) {
+            // nothing to do here as well
+        }
     }
 
     private static class SystemLogger extends Logger {
@@ -51,6 +62,11 @@ public final class BeaconLogger {
         @Override
         public void d(@NonNull String message) {
             Log.d("BeaconLogging", message);
+        }
+
+        @Override
+        void e(@NonNull String message) {
+            Log.e("BeaconLogging", message);
         }
     }
 }
