@@ -4,6 +4,7 @@ import aga.android.luch.Beacon
 import aga.android.luch.BeaconScanner
 import aga.android.luch.IBeaconListener
 import aga.android.luch.IScanner
+import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import java.util.concurrent.TimeUnit
 
@@ -21,10 +22,14 @@ class BeaconLiveData : LiveData<Set<Beacon>>() {
         .setRegionDefinitions(RegionsDefinitionSource.getDefinitions())
         .build()
 
+    // Check is suppressed since permission checks should happen on the Fragment/Activity level,
+    // not in the LiveData/ViewModel. See MainActivity.
+    @SuppressLint("MissingPermission")
     override fun onActive() {
         scanner.start()
     }
 
+    @SuppressLint("MissingPermission")
     override fun onInactive() {
         scanner.stop()
     }
