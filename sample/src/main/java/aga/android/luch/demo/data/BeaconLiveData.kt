@@ -26,7 +26,6 @@ class BeaconLiveData : LiveData<Set<Beacon>>() {
             }
         )
         .setBeaconListener(listener)
-        .setRegionDefinitions(RegionsDefinitionSource.getDefinitions())
         .build()
 
     // Check is suppressed since permission checks should happen on the Fragment/Activity level,
