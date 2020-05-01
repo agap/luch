@@ -1,16 +1,13 @@
 package aga.android.luch;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import static android.os.SystemClock.elapsedRealtime;
 
@@ -29,11 +27,9 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     private static final int MESSAGE_PAUSE_SCANS = 2;
     private static final int MESSAGE_STOP_SCANS = 3;
     private static final int MESSAGE_EVICT_OUTDATED_BEACONS = 4;
-    
-    private final ScanSettings scanSettings;
 
     @NonNull
-    private final BluetoothAdapter bluetoothAdapter;
+    private IBleDevice bleDevice;
 
     @NonNull
     private final BeaconScanCallback scanCallback = new BeaconScanCallback();
@@ -52,26 +48,9 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     private long scanDurationMillis;
     private long restDurationMillis;
 
-    @NonNull
-    private List<ScanFilter> scanFilters = Collections.emptyList();
-
-    private BeaconScanner() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (bluetoothAdapter == null) {
-            throw new IllegalStateException("Bluetooth is not accessible on that device");
-        }
-
-        final ScanSettings.Builder scanSettingsBuilder = new ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            scanSettingsBuilder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
-        }
-
-        scanSettings = scanSettingsBuilder.build();
-
-        handler = new Handler(this);
+    private BeaconScanner(@NonNull IBleDevice bleDevice) {
+        this.bleDevice = bleDevice;
+        this.handler = new Handler(this);
     }
 
     @Override
@@ -99,7 +78,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             case MESSAGE_RESUME_SCANS:
                 BeaconLogger.d("BLE scans resumed...");
 
-                startScans();
+                bleDevice.startScans(scanCallback);
 
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MESSAGE_PAUSE_SCANS),
@@ -111,7 +90,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             case MESSAGE_PAUSE_SCANS:
                 BeaconLogger.d("BLE scans paused...");
 
-                stopScans();
+                bleDevice.stopScans(scanCallback);
 
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MESSAGE_RESUME_SCANS),
@@ -123,7 +102,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             case MESSAGE_STOP_SCANS:
                 BeaconLogger.d("BLE scans stopped");
 
-                stopScans();
+                bleDevice.stopScans(scanCallback);
 
                 handler.removeCallbacksAndMessages(null);
 
@@ -145,41 +124,6 @@ public class BeaconScanner implements IScanner, Handler.Callback {
         }
 
         return true;
-    }
-
-    private void startScans() {
-        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        if (bleScanner == null) {
-            BeaconLogger.e(
-                "BluetoothLeScanner is missing, scans will not be started " +
-                    "(check if Bluetooth is turned on)"
-            );
-
-            return;
-        }
-
-        bleScanner
-            .startScan(
-                scanFilters,
-                scanSettings,
-                scanCallback
-            );
-    }
-
-    private void stopScans() {
-        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        if (bleScanner == null) {
-            BeaconLogger.e(
-                "Can't stop the BLE scans since there is no BluetoothLeScanner available, " +
-                    "most likely the scans weren't started either (check if Bluetooth is turned on)"
-            );
-
-            return;
-        }
-
-        bleScanner.stopScan(scanCallback);
     }
 
     private void evictOutdatedBeacons() {
@@ -209,6 +153,8 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
         private long beaconEvictionPeriodicityMillis = TimeUnit.SECONDS.toMillis(5);
 
+        private IBleDevice bleDevice = null;
+
         private long scanDurationMillis = 100;
         private long restDurationMillis = 1_000;
 
@@ -237,14 +183,44 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             return this;
         }
 
+        @VisibleForTesting
+        Builder setBleDevice(IBleDevice bleDevice) {
+            this.bleDevice = bleDevice;
+            return this;
+        }
+
         public BeaconScanner build() {
-            final BeaconScanner scanner = new BeaconScanner();
+            final BeaconScanner scanner;
+
+            if (bleDevice != null) {
+                scanner = new BeaconScanner(bleDevice);
+            } else {
+                final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+                if (bluetoothAdapter == null) {
+                    throw new IllegalStateException("Bluetooth is not accessible on that device");
+                }
+
+                final ScanSettings.Builder scanSettingsBuilder = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    scanSettingsBuilder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+                }
+
+                final IBleDevice bleDevice = new SystemBleDevice(
+                    bluetoothAdapter,
+                    scanSettingsBuilder.build(),
+                    RegionDefinitionMapper.asScanFilters(definitions)
+                );
+
+                scanner = new BeaconScanner(bleDevice);
+            }
 
             scanner.beaconEvictionPeriodicityMillis = beaconEvictionPeriodicityMillis;
             scanner.scanDurationMillis = scanDurationMillis;
             scanner.restDurationMillis = restDurationMillis;
             scanner.beaconListener = listener;
-            scanner.scanFilters = RegionDefinitionMapper.asScanFilters(definitions);
 
             return scanner;
         }

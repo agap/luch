@@ -1,12 +1,16 @@
 package aga.android.luch;
 
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.lang.reflect.InvocationTargetException;
+
+import static aga.android.luch.TestHelpers.createScanResult;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -49,7 +53,7 @@ public class RegionDefinitionMapperTest {
 
         // given
         final RegionDefinition definition = new RegionDefinition(
-            "e56e1f2c-c756-476f-8323-8d1f9cd245ea", 42819, 55646
+            "E56E1F2C-C756-476F-8323-8D1F9CD245EA", 42819, 55646
         );
 
         // when
@@ -78,7 +82,7 @@ public class RegionDefinitionMapperTest {
 
         // given
         final RegionDefinition definition = new RegionDefinition(
-            "e56e1f2c-c756-476f-8323-8d1f9cd245ea"
+            "E56E1F2C-C756-476F-8323-8D1F9CD245EA"
         );
 
         // when
@@ -100,5 +104,37 @@ public class RegionDefinitionMapperTest {
             },
             scanFilter.getManufacturerData()
         );
+    }
+
+    @Test
+    public void testScanResultToBeaconConversion()
+            throws InvocationTargetException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException {
+
+        // given
+        final String bluetoothAddress = "00:11:22:33:FF:EE";
+        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final int rssi = -96;
+        final int major = 100;
+        final int minor = 65520;
+        final ScanResult scanResult = createScanResult(
+            bluetoothAddress,
+            proximityUuid,
+            major,
+            minor,
+            rssi
+        );
+
+        // when
+        final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
+
+        // then
+        assertEquals(bluetoothAddress, beacon.getHardwareAddress());
+        assertEquals(rssi, beacon.getRssi());
+        assertEquals(proximityUuid, beacon.getUuid());
+        assertEquals(major, beacon.getMajor());
+        assertEquals(minor, beacon.getMinor());
     }
 }

@@ -15,9 +15,9 @@ class BeaconLiveData : LiveData<Set<Beacon>>() {
     }
 
     private val scanner: IScanner = BeaconScanner.Builder()
-        .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(5))
-        .setScanDuration(500)
-        .setRestDuration(TimeUnit.SECONDS.toMillis(1))
+        .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(10))
+        .setScanDuration(TimeUnit.SECONDS.toMillis(1))
+        .setRestDuration(TimeUnit.SECONDS.toMillis(8))
         .setBeaconListener(listener)
         .setRegionDefinitions(RegionsDefinitionSource.getDefinitions())
         .build()
