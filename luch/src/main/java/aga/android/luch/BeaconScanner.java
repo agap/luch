@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -151,7 +152,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
         private IBeaconListener listener = null;
 
-        private List<RegionDefinition> definitions;
+        private List<RegionDefinition> definitions = Collections.emptyList();
 
         private long beaconEvictionPeriodicityMillis = TimeUnit.SECONDS.toMillis(5);
 
@@ -164,6 +165,13 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             return this;
         }
 
+        /**
+         * Sets the list of {@link RegionDefinition}s to look for. The empty list means we're
+         * interested in all iBeacons around us, no matter what proximity uuid/major/minor do
+         * they have.
+         *
+         * Default value: empty list.
+         */
         public Builder setRegionDefinitions(List<RegionDefinition> definitions) {
             this.definitions = definitions;
             return this;

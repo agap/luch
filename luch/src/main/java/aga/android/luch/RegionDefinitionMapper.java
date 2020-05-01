@@ -4,6 +4,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -52,12 +53,28 @@ class RegionDefinitionMapper {
         0
     };
 
+    private static final byte[] MASK_ALL_BEACONS = new byte[23];
+
+    private static final List<ScanFilter> SCAN_FILTER_MATCH_ALL = Collections.singletonList(
+        new ScanFilter
+            .Builder()
+            .setManufacturerData(
+                MANUFACTURER_ID,
+                MASK_ALL_BEACONS,
+                MASK_ALL_BEACONS
+            )
+            .build()
+    );
 
     private RegionDefinitionMapper() {
 
     }
 
     static List<ScanFilter> asScanFilters(@NonNull List<RegionDefinition> regionDefinitions) {
+        if (regionDefinitions.isEmpty()) {
+            return SCAN_FILTER_MATCH_ALL;
+        }
+
         final List<ScanFilter> filters = new ArrayList<>();
 
         for (RegionDefinition regionDefinition : regionDefinitions) {

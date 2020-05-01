@@ -9,10 +9,15 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
 
 import static aga.android.luch.TestHelpers.createScanResult;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
@@ -47,6 +52,8 @@ public class RegionDefinitionMapperTest {
 
         0
     };
+
+    private static final byte[] MATCH_ALL_MASK = new byte[23];
 
     @Test
     public void testFullRegionDefinitionToScanFilterConversion() {
@@ -107,6 +114,26 @@ public class RegionDefinitionMapperTest {
     }
 
     @Test
+    public void testEmptyListOfRegionDefinitionsIsConvertedToSpecialMatchAllScanFilter() {
+
+        // given
+        final List<RegionDefinition> regionDefinitions = Collections.emptyList();
+
+        // when
+        final List<ScanFilter> scanFilters = RegionDefinitionMapper.asScanFilters(
+            regionDefinitions
+        );
+
+        // then
+        assertThat(scanFilters, hasSize(1));
+
+        final ScanFilter scanFilter = scanFilters.get(0);
+
+        assertEquals(76, scanFilter.getManufacturerId());
+        assertArrayEquals(MATCH_ALL_MASK, scanFilter.getManufacturerDataMask());
+    }
+
+    @Test
     public void testScanResultToBeaconConversion()
             throws InvocationTargetException,
                     NoSuchMethodException,
@@ -131,6 +158,7 @@ public class RegionDefinitionMapperTest {
         final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
 
         // then
+        assertNotNull(beacon);
         assertEquals(bluetoothAddress, beacon.getHardwareAddress());
         assertEquals(rssi, beacon.getRssi());
         assertEquals(proximityUuid, beacon.getUuid());
