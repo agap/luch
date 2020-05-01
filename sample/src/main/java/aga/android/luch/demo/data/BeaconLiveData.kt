@@ -4,7 +4,9 @@ import aga.android.luch.Beacon
 import aga.android.luch.BeaconScanner
 import aga.android.luch.IBeaconListener
 import aga.android.luch.IScanner
+import aga.android.luch.ScanDuration
 import android.annotation.SuppressLint
+import android.os.Build
 import androidx.lifecycle.LiveData
 import java.util.concurrent.TimeUnit
 
@@ -16,8 +18,13 @@ class BeaconLiveData : LiveData<Set<Beacon>>() {
 
     private val scanner: IScanner = BeaconScanner.Builder()
         .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(10))
-        .setScanDuration(TimeUnit.SECONDS.toMillis(1))
-        .setRestDuration(TimeUnit.SECONDS.toMillis(8))
+        .setScanDuration(
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+                ScanDuration.preciseDuration(150, 1500)
+            } else {
+                ScanDuration.UNIFORM
+            }
+        )
         .setBeaconListener(listener)
         .setRegionDefinitions(RegionsDefinitionSource.getDefinitions())
         .build()

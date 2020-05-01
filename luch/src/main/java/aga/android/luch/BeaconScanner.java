@@ -43,13 +43,15 @@ public class BeaconScanner implements IScanner, Handler.Callback {
     @NonNull
     private final Map<Beacon, Long> nearbyBeacons = new HashMap<>();
 
+    @NonNull
+    private final ScanDuration scanDuration;
+
     private long beaconEvictionPeriodicityMillis;
 
-    private long scanDurationMillis;
-    private long restDurationMillis;
-
-    private BeaconScanner(@NonNull IBleDevice bleDevice) {
+    private BeaconScanner(@NonNull IBleDevice bleDevice,
+                          @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
+        this.scanDuration = scanDuration;
         this.handler = new Handler(this);
     }
 
@@ -82,7 +84,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MESSAGE_PAUSE_SCANS),
-                    scanDurationMillis
+                    scanDuration.scanDurationMillis
                 );
 
                 break;
@@ -94,7 +96,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MESSAGE_RESUME_SCANS),
-                    restDurationMillis
+                    scanDuration.restDurationMillis
                 );
 
                 break;
@@ -155,8 +157,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
         private IBleDevice bleDevice = null;
 
-        private long scanDurationMillis = 100;
-        private long restDurationMillis = 1_000;
+        private ScanDuration scanDuration;
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
@@ -173,13 +174,8 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             return this;
         }
 
-        public Builder setScanDuration(long millis) {
-            this.scanDurationMillis = millis;
-            return this;
-        }
-
-        public Builder setRestDuration(long millis) {
-            this.restDurationMillis = millis;
+        public Builder setScanDuration(@NonNull ScanDuration scanDuration) {
+            this.scanDuration = scanDuration;
             return this;
         }
 
@@ -193,7 +189,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             final BeaconScanner scanner;
 
             if (bleDevice != null) {
-                scanner = new BeaconScanner(bleDevice);
+                scanner = new BeaconScanner(bleDevice, scanDuration);
             } else {
                 final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -214,12 +210,10 @@ public class BeaconScanner implements IScanner, Handler.Callback {
                     RegionDefinitionMapper.asScanFilters(definitions)
                 );
 
-                scanner = new BeaconScanner(bleDevice);
+                scanner = new BeaconScanner(bleDevice, scanDuration);
             }
 
             scanner.beaconEvictionPeriodicityMillis = beaconEvictionPeriodicityMillis;
-            scanner.scanDurationMillis = scanDurationMillis;
-            scanner.restDurationMillis = restDurationMillis;
             scanner.beaconListener = listener;
 
             return scanner;
