@@ -21,8 +21,7 @@ import androidx.annotation.VisibleForTesting;
 
 import static android.os.SystemClock.elapsedRealtime;
 
-// todo make package private
-public class BeaconScanner implements IScanner, Handler.Callback {
+public class BeaconScanner implements IScanner {
 
     private static final int MESSAGE_RESUME_SCANS = 1;
     private static final int MESSAGE_PAUSE_SCANS = 2;
@@ -53,7 +52,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
                           @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
         this.scanDuration = scanDuration;
-        this.handler = new Handler(this);
+        this.handler = new Handler(new HandlerCallback());
     }
 
     @Override
@@ -73,60 +72,6 @@ public class BeaconScanner implements IScanner, Handler.Callback {
        handler.sendMessageAtFrontOfQueue(
            handler.obtainMessage(MESSAGE_STOP_SCANS)
        );
-    }
-
-    @Override
-    public boolean handleMessage(@NonNull Message msg) {
-        switch (msg.what) {
-            case MESSAGE_RESUME_SCANS:
-                BeaconLogger.d("BLE scans resumed...");
-
-                bleDevice.startScans(scanCallback);
-
-                handler.sendMessageDelayed(
-                    handler.obtainMessage(MESSAGE_PAUSE_SCANS),
-                    scanDuration.scanDurationMillis
-                );
-
-                break;
-
-            case MESSAGE_PAUSE_SCANS:
-                BeaconLogger.d("BLE scans paused...");
-
-                bleDevice.stopScans(scanCallback);
-
-                handler.sendMessageDelayed(
-                    handler.obtainMessage(MESSAGE_RESUME_SCANS),
-                    scanDuration.restDurationMillis
-                );
-
-                break;
-
-            case MESSAGE_STOP_SCANS:
-                BeaconLogger.d("BLE scans stopped");
-
-                bleDevice.stopScans(scanCallback);
-
-                handler.removeCallbacksAndMessages(null);
-
-                break;
-
-            case MESSAGE_EVICT_OUTDATED_BEACONS:
-                BeaconLogger.d("Beacons eviction started");
-
-                evictOutdatedBeacons();
-
-                BeaconLogger.d("Beacons eviction completed");
-
-                handler.sendMessageDelayed(
-                    handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
-                    beaconEvictionPeriodicityMillis
-                );
-
-                break;
-        }
-
-        return true;
     }
 
     private void evictOutdatedBeacons() {
@@ -225,6 +170,63 @@ public class BeaconScanner implements IScanner, Handler.Callback {
             scanner.beaconListener = listener;
 
             return scanner;
+        }
+    }
+
+    private final class HandlerCallback implements Handler.Callback {
+
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            switch (msg.what) {
+                case MESSAGE_RESUME_SCANS:
+                    BeaconLogger.d("BLE scans resumed...");
+
+                    bleDevice.startScans(scanCallback);
+
+                    handler.sendMessageDelayed(
+                        handler.obtainMessage(MESSAGE_PAUSE_SCANS),
+                        scanDuration.scanDurationMillis
+                    );
+
+                    break;
+
+                case MESSAGE_PAUSE_SCANS:
+                    BeaconLogger.d("BLE scans paused...");
+
+                    bleDevice.stopScans(scanCallback);
+
+                    handler.sendMessageDelayed(
+                        handler.obtainMessage(MESSAGE_RESUME_SCANS),
+                        scanDuration.restDurationMillis
+                    );
+
+                    break;
+
+                case MESSAGE_STOP_SCANS:
+                    BeaconLogger.d("BLE scans stopped");
+
+                    bleDevice.stopScans(scanCallback);
+
+                    handler.removeCallbacksAndMessages(null);
+
+                    break;
+
+                case MESSAGE_EVICT_OUTDATED_BEACONS:
+                    BeaconLogger.d("Beacons eviction started");
+
+                    evictOutdatedBeacons();
+
+                    BeaconLogger.d("Beacons eviction completed");
+
+                    handler.sendMessageDelayed(
+                        handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
+                        beaconEvictionPeriodicityMillis
+                    );
+
+                    break;
+            }
+
+            return true;
         }
     }
 
