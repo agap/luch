@@ -157,7 +157,7 @@ public class BeaconScanner implements IScanner, Handler.Callback {
 
         private IBleDevice bleDevice = null;
 
-        private ScanDuration scanDuration;
+        private ScanDuration scanDuration = ScanDuration.UNIFORM;
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
