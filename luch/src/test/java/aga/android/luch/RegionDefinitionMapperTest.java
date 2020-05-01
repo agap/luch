@@ -16,6 +16,7 @@ import static aga.android.luch.TestHelpers.createScanResult;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
@@ -157,6 +158,7 @@ public class RegionDefinitionMapperTest {
         final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
 
         // then
+        assertNotNull(beacon);
         assertEquals(bluetoothAddress, beacon.getHardwareAddress());
         assertEquals(rssi, beacon.getRssi());
         assertEquals(proximityUuid, beacon.getUuid());
