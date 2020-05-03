@@ -2,9 +2,11 @@ package aga.android.luch;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.IntRange;
+
 public final class ScanDuration {
 
-    public static final ScanDuration UNIFORM = new ScanDuration(
+    public static final ScanDuration UNIFORM = ScanDuration.preciseDuration(
         TimeUnit.SECONDS.toMillis(6),
         TimeUnit.SECONDS.toMillis(6)
     );
@@ -31,7 +33,18 @@ public final class ScanDuration {
      *
      * Hence, use preciseDuration at your own risk.
      */
-    public static ScanDuration preciseDuration(long scanDurationMillis, long restDurationMillis) {
+    public static ScanDuration preciseDuration(@IntRange(from = 0) long scanDurationMillis,
+                                               @IntRange(from = 0) long restDurationMillis) {
+        if (scanDurationMillis < 0) {
+            throw new AssertionError("Scan duration has to be non-negative; actual value is: " +
+                    scanDurationMillis);
+        }
+
+        if (restDurationMillis < 0) {
+            throw new AssertionError("Rest duration has to be non-negative; actual value is: " +
+                    restDurationMillis);
+        }
+
         return new ScanDuration(scanDurationMillis, restDurationMillis);
     }
 }
