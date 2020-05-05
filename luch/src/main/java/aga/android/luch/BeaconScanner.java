@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -27,6 +28,8 @@ public class BeaconScanner implements IScanner {
     private static final int MESSAGE_PAUSE_SCANS = 2;
     private static final int MESSAGE_STOP_SCANS = 3;
     private static final int MESSAGE_EVICT_OUTDATED_BEACONS = 4;
+
+    private static final long BEACON_EVICTION_PERIODICITY_MILLIS = 1_000;
 
     @NonNull
     private IBleDevice bleDevice;
@@ -46,7 +49,7 @@ public class BeaconScanner implements IScanner {
     @NonNull
     private final ScanDuration scanDuration;
 
-    private long beaconEvictionPeriodicityMillis;
+    private long beaconExpirationDurationMillis;
 
     private BeaconScanner(@NonNull IBleDevice bleDevice,
                           @NonNull ScanDuration scanDuration) {
@@ -63,7 +66,7 @@ public class BeaconScanner implements IScanner {
 
         handler.sendMessageDelayed(
             handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
-            beaconEvictionPeriodicityMillis
+            BEACON_EVICTION_PERIODICITY_MILLIS
         );
     }
 
@@ -82,7 +85,7 @@ public class BeaconScanner implements IScanner {
             final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
 
             if (lastAppearanceMillis != null
-                    && elapsedRealtime() - lastAppearanceMillis > beaconEvictionPeriodicityMillis) {
+                    && elapsedRealtime() - lastAppearanceMillis > beaconExpirationDurationMillis) {
 
                 iterator.remove();
             }
@@ -99,7 +102,7 @@ public class BeaconScanner implements IScanner {
 
         private List<RegionDefinition> definitions = Collections.emptyList();
 
-        private long beaconEvictionPeriodicityMillis = TimeUnit.SECONDS.toMillis(5);
+        private long beaconExpirationDurationSeconds = 5;
 
         private IBleDevice bleDevice = null;
 
@@ -122,8 +125,8 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
-        public Builder setBeaconEvictionTime(long millis) {
-            this.beaconEvictionPeriodicityMillis = millis;
+        public Builder setBeaconExpirationDuration(@IntRange(from = 1) long seconds) {
+            this.beaconExpirationDurationSeconds = seconds;
             return this;
         }
 
@@ -139,6 +142,11 @@ public class BeaconScanner implements IScanner {
         }
 
         public BeaconScanner build() {
+            if (beaconExpirationDurationSeconds < 1) {
+                throw new AssertionError("Beacon validity duration has to be positive; " +
+                        "actual value is: " + beaconExpirationDurationSeconds + " seconds");
+            }
+
             final BeaconScanner scanner;
 
             if (bleDevice != null) {
@@ -166,7 +174,9 @@ public class BeaconScanner implements IScanner {
                 scanner = new BeaconScanner(bleDevice, scanDuration);
             }
 
-            scanner.beaconEvictionPeriodicityMillis = beaconEvictionPeriodicityMillis;
+            scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
+                beaconExpirationDurationSeconds
+            );
             scanner.beaconListener = listener;
 
             return scanner;
@@ -220,7 +230,7 @@ public class BeaconScanner implements IScanner {
 
                     handler.sendMessageDelayed(
                         handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
-                        beaconEvictionPeriodicityMillis
+                        BEACON_EVICTION_PERIODICITY_MILLIS
                     );
 
                     break;

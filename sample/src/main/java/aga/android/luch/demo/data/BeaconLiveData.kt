@@ -8,7 +8,6 @@ import aga.android.luch.ScanDuration
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.lifecycle.LiveData
-import java.util.concurrent.TimeUnit
 
 class BeaconLiveData : LiveData<Set<Beacon>>() {
 
@@ -17,7 +16,7 @@ class BeaconLiveData : LiveData<Set<Beacon>>() {
     }
 
     private val scanner: IScanner = BeaconScanner.Builder()
-        .setBeaconEvictionTime(TimeUnit.SECONDS.toMillis(10))
+        .setBeaconExpirationDuration(10)
         .setScanDuration(
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
                 ScanDuration.preciseDuration(150, 1500)
