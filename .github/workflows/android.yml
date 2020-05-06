@@ -18,8 +18,5 @@ jobs:
       with:
         java-version: 1.8
 
-    - name: Run Android Lint
-      run: ./gradlew luch:lint
-      
-    - name: Run Unit Tests
-      run: ./gradlew luch:testDebugUnitTest
+    - name: Run all registered code quality checks (Lint, Checkstyle and tests)
+      run: ./gradlew luch:check

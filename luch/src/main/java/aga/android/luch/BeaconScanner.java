@@ -80,7 +80,7 @@ public class BeaconScanner implements IScanner {
     private void evictOutdatedBeacons() {
         final Iterator<Beacon> iterator = nearbyBeacons.keySet().iterator();
 
-        for (; iterator.hasNext(); ) {
+        for (; iterator.hasNext();) {
             final Beacon inMemoryBeacon = iterator.next();
             final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
 
@@ -143,8 +143,8 @@ public class BeaconScanner implements IScanner {
 
         public BeaconScanner build() {
             if (beaconExpirationDurationSeconds < 1) {
-                throw new AssertionError("Beacon validity duration has to be positive; " +
-                        "actual value is: " + beaconExpirationDurationSeconds + " seconds");
+                throw new AssertionError("Beacon validity duration has to be positive; "
+                        + "actual value is: " + beaconExpirationDurationSeconds + " seconds");
             }
 
             final BeaconScanner scanner;
@@ -233,6 +233,9 @@ public class BeaconScanner implements IScanner {
                         BEACON_EVICTION_PERIODICITY_MILLIS
                     );
 
+                    break;
+
+                default:
                     break;
             }
 

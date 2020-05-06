@@ -35,12 +35,12 @@ class Conversions {
     static String byteArrayToUuidString(@NonNull @Size(min = 16, max = 16) byte[] uuid) {
         final StringBuilder stringBuilder = new StringBuilder(uuid.length * 2 + 4);
 
-        for (int j = 0; j < uuid.length; j++ ) {
+        for (int j = 0; j < uuid.length; j++) {
             final int v = uuid[j] & 0xFF;
             stringBuilder.insert(j * 2, HEX_ARRAY[v >>> 4]);
             stringBuilder.insert(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
         }
-        
+
         stringBuilder.insert(8, '-');
         stringBuilder.insert(13, '-');
         stringBuilder.insert(18, '-');

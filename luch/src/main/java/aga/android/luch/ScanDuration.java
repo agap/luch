@@ -36,13 +36,13 @@ public final class ScanDuration {
     public static ScanDuration preciseDuration(@IntRange(from = 0) long scanDurationMillis,
                                                @IntRange(from = 0) long restDurationMillis) {
         if (scanDurationMillis < 0) {
-            throw new AssertionError("Scan duration has to be non-negative; actual value is: " +
-                    scanDurationMillis);
+            throw new AssertionError("Scan duration has to be non-negative; actual value is: "
+                    + scanDurationMillis);
         }
 
         if (restDurationMillis < 0) {
-            throw new AssertionError("Rest duration has to be non-negative; actual value is: " +
-                    restDurationMillis);
+            throw new AssertionError("Rest duration has to be non-negative; actual value is: "
+                    + restDurationMillis);
         }
 
         return new ScanDuration(scanDurationMillis, restDurationMillis);

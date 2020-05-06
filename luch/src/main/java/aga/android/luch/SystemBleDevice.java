@@ -35,8 +35,8 @@ class SystemBleDevice implements IBleDevice {
         // Bluetooth is disabled.
         if (!bluetoothAdapter.isEnabled()) {
             BeaconLogger.e(
-                "BluetoothAdapter is not enabled, scans will not be started (check if Bluetooth " +
-                    "is turned on)"
+                "BluetoothAdapter is not enabled, scans will not be started (check if Bluetooth "
+                    + "is turned on)"
             );
             return;
         }
@@ -45,8 +45,8 @@ class SystemBleDevice implements IBleDevice {
 
         if (bleScanner == null) {
             BeaconLogger.e(
-                "BluetoothLeScanner is missing, scans will not be started " +
-                    "(check if Bluetooth is turned on)"
+                "BluetoothLeScanner is missing, scans will not be started "
+                    + "(check if Bluetooth is turned on)"
             );
 
             return;
@@ -64,8 +64,8 @@ class SystemBleDevice implements IBleDevice {
     public void stopScans(@NonNull ScanCallback scanCallback) {
         if (!bluetoothAdapter.isEnabled()) {
             BeaconLogger.e(
-                "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely " +
-                    "the scans weren't started either (check if Bluetooth is turned on)"
+                "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely "
+                    + "the scans weren't started either (check if Bluetooth is turned on)"
             );
             return;
         }
@@ -74,8 +74,8 @@ class SystemBleDevice implements IBleDevice {
 
         if (bleScanner == null) {
             BeaconLogger.e(
-                "Can't stop the BLE scans since there is no BluetoothLeScanner available, " +
-                    "most likely the scans weren't started either (check if Bluetooth is turned on)"
+                "Can't stop the BLE scans since there is no BluetoothLeScanner available, most "
+                    + "likely the scans weren't started either (check if Bluetooth is turned on)"
             );
 
             return;

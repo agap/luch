@@ -10,26 +10,26 @@ public final class BeaconLogger {
     public static final Logger EMPTY_INSTANCE = new EmptyLogger();
     public static final Logger SYSTEM_INSTANCE = new SystemLogger();
 
-    private static Logger LOGGER = EMPTY_INSTANCE;
+    private static Logger logger = EMPTY_INSTANCE;
 
     private BeaconLogger() {
 
     }
 
     static void d(@NonNull String message) {
-        LOGGER.d(message);
+        logger.d(message);
     }
 
     static void e(@NonNull String message) {
-        LOGGER.e(message);
+        logger.e(message);
     }
 
     public static void setInstance(@NonNull Logger logger) {
-        LOGGER = logger;
+        BeaconLogger.logger = logger;
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static abstract class Logger {
+    public abstract static class Logger {
 
         abstract void d(@NonNull String message);
 
