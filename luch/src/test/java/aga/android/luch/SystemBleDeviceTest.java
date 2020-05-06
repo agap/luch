@@ -39,17 +39,18 @@ public class SystemBleDeviceTest {
         }
     };
 
+    private final SystemBleDevice device = new SystemBleDevice(
+        adapter,
+        scanSettings,
+        scanFilters
+    );
 
     @Test
     public void testScansWillBeStartedIfThereIsBleScannerInBluetoothAdapter() {
 
         // given
-        final SystemBleDevice device = new SystemBleDevice(
-            adapter,
-            scanSettings,
-            scanFilters
-        );
         when(adapter.getBluetoothLeScanner()).thenReturn(scanner);
+        when(adapter.isEnabled()).thenReturn(true);
 
         // when
         device.startScans(scanCallback);
@@ -63,12 +64,8 @@ public class SystemBleDeviceTest {
     public void testScansWillBeStoppedIfThereIsBleScannerInBluetoothAdapter() {
 
         // given
-        final SystemBleDevice device = new SystemBleDevice(
-            adapter,
-            scanSettings,
-            scanFilters
-        );
         when(adapter.getBluetoothLeScanner()).thenReturn(scanner);
+        when(adapter.isEnabled()).thenReturn(true);
 
         // when
         device.stopScans(scanCallback);
@@ -81,36 +78,56 @@ public class SystemBleDeviceTest {
     @Test
     public void testNoExceptionIsThrownWhileTryingToStartScansWhenThereIsNoBleScanner() {
         // given
-        final SystemBleDevice device = new SystemBleDevice(
-            adapter,
-            scanSettings,
-            scanFilters
-        );
         when(adapter.getBluetoothLeScanner()).thenReturn(null);
+        when(adapter.isEnabled()).thenReturn(true);
 
         // when
         device.startScans(scanCallback);
 
         // then
         verify(adapter).getBluetoothLeScanner();
+        verify(adapter).isEnabled();
         verifyNoMoreInteractions(adapter);
     }
 
     @Test
     public void testNoExceptionIsThrownWhileTryingToStopScansWhenThereIsNoBleScanner() {
         // given
-        final SystemBleDevice device = new SystemBleDevice(
-            adapter,
-            scanSettings,
-            scanFilters
-        );
         when(adapter.getBluetoothLeScanner()).thenReturn(null);
+        when(adapter.isEnabled()).thenReturn(true);
 
         // when
         device.stopScans(scanCallback);
 
         // then
+        verify(adapter).isEnabled();
         verify(adapter).getBluetoothLeScanner();
+        verifyNoMoreInteractions(adapter);
+    }
+
+    @Test
+    public void testNoScansAreStartedIfBluetoothAdapterIsDisabled() {
+        // given
+        when(adapter.isEnabled()).thenReturn(false);
+
+        // when
+        device.startScans(scanCallback);
+
+        // then
+        verify(adapter).isEnabled();
+        verifyNoMoreInteractions(adapter);
+    }
+
+    @Test
+    public void testNoAttemptToStopScansIsMadeIfBluetoothAdapterIsDisabled() {
+        // given
+        when(adapter.isEnabled()).thenReturn(false);
+
+        // when
+        device.stopScans(scanCallback);
+
+        // then
+        verify(adapter).isEnabled();
         verifyNoMoreInteractions(adapter);
     }
 }
