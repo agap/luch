@@ -24,6 +24,14 @@ import static org.junit.Assert.assertEquals;
 @Config(sdk = 21, manifest = Config.NONE)
 public class BeaconScannerTest {
 
+    @Test(expected = AssertionError.class)
+    public void testNegativeBeaconValidityDurationIsNotAccepted() {
+        new BeaconScanner
+            .Builder()
+            .setBeaconExpirationDuration(-1)
+            .build();
+    }
+
     @Test
     public void testScannerStartsAndStopsScansViaBleDevice() {
         // given
