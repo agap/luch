@@ -20,19 +20,19 @@ public class RegionDefinition {
                             @Nullable @IntRange(from = 0, to = 65535) Integer minor) {
 
         if (major != null && (major < 0 || major > 65535)) {
-            throw new AssertionError("Major has to be in range [0, 65535]; " +
-                    "actual value is: " + major);
+            throw new AssertionError("Major has to be in range [0, 65535]; "
+                    + "actual value is: " + major);
         }
 
         if (minor != null && (minor < 0 || minor > 65535)) {
-            throw new AssertionError("Minor has to be in range [0, 65535]; " +
-                    "actual value is: " + minor);
+            throw new AssertionError("Minor has to be in range [0, 65535]; "
+                     + "actual value is: " + minor);
         }
 
         if ((major != null && minor == null) || (major == null && minor != null)) {
-            throw new AssertionError("Both major and minor are expected to be either " +
-                    "non-null or nullable at the same time; actual major is: " + major +
-                    ", actual minor is: " + minor);
+            throw new AssertionError("Both major and minor are expected to be either "
+                    + "non-null or nullable at the same time; actual major is: " + major
+                    + ", actual minor is: " + minor);
         }
 
         this.uuid = uuid;

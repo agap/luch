@@ -101,7 +101,7 @@ class TestHelpers {
 
         return constructor.newInstance(
             Collections.emptyList(), // service solicitation uuids
-            manufacturerData , // manufacturer specific data
+            manufacturerData, // manufacturer specific data
             Collections.emptyMap(), // service data
             6, // advertise flags
             -2147483648, // tx power level

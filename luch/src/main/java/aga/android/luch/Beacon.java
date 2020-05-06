@@ -57,9 +57,9 @@ public class Beacon {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Beacon beacon = (Beacon) o;
-        return major == beacon.major &&
-                minor == beacon.minor &&
-                uuid.equals(beacon.uuid);
+        return major == beacon.major
+            && minor == beacon.minor
+            && uuid.equals(beacon.uuid);
     }
 
     @Override
@@ -67,14 +67,15 @@ public class Beacon {
         return Objects.hash(uuid, major, minor);
     }
 
+    @NonNull
     @Override
     public String toString() {
-        return "Beacon{" +
-                "uuid='" + uuid + '\'' +
-                ", hardwareAddress='" + hardwareAddress + '\'' +
-                ", major=" + major +
-                ", minor=" + minor +
-                ", rssi=" + rssi +
-                '}';
+        return "Beacon{"
+            + "uuid='" + uuid + '\''
+            + ", hardwareAddress='" + hardwareAddress + '\''
+            + ", major=" + major
+            + ", minor=" + minor
+            + ", rssi=" + rssi
+            + '}';
     }
 }
