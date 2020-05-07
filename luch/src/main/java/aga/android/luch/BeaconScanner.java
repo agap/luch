@@ -285,9 +285,7 @@ public class BeaconScanner implements IScanner {
 
             nearbyBeacons.put(beacon, elapsedRealtime());
 
-            if (beaconListener != null) {
-                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
-            }
+            uiHandler.post(deliverBeaconsJob);
         }
 
         @Override
