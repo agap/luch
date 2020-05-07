@@ -273,11 +273,17 @@ public class BeaconScanner implements IScanner {
         }
     };
 
-    private final class BeaconScanCallback extends ScanCallback {
+    private final class BeaconHandlerJob implements Runnable {
+
+        private final ScanResult scanResult;
+
+        private BeaconHandlerJob(ScanResult scanResult) {
+            this.scanResult = scanResult;
+        }
 
         @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            final Beacon beacon = RegionDefinitionMapper.asBeacon(result);
+        public void run() {
+            final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
 
             if (beacon == null) {
                 return;
@@ -286,6 +292,14 @@ public class BeaconScanner implements IScanner {
             nearbyBeacons.put(beacon, elapsedRealtime());
 
             uiHandler.post(deliverBeaconsJob);
+        }
+    }
+
+    private final class BeaconScanCallback extends ScanCallback {
+
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            scheduledExecutor.submit(new BeaconHandlerJob(result));
         }
 
         @Override
