@@ -6,13 +6,13 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Message;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntRange;
@@ -21,13 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import static android.os.SystemClock.elapsedRealtime;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public class BeaconScanner implements IScanner {
-
-    private static final int MESSAGE_RESUME_SCANS = 1;
-    private static final int MESSAGE_PAUSE_SCANS = 2;
-    private static final int MESSAGE_STOP_SCANS = 3;
-    private static final int MESSAGE_EVICT_OUTDATED_BEACONS = 4;
 
     private static final long BEACON_EVICTION_PERIODICITY_MILLIS = 1_000;
 
@@ -41,10 +37,16 @@ public class BeaconScanner implements IScanner {
     private IBeaconListener beaconListener = null;
 
     @NonNull
-    private final Handler handler;
+    private final Handler uiHandler;
 
     @NonNull
-    private final Map<Beacon, Long> nearbyBeacons = new HashMap<>();
+    private final ScanExecutorProvider scheduledExecutorProvider;
+
+    @NonNull
+    private ScheduledExecutorService scheduledExecutor;
+
+    @NonNull
+    private final Map<Beacon, Long> nearbyBeacons = new ConcurrentHashMap<>();
 
     @NonNull
     private final ScanDuration scanDuration;
@@ -52,28 +54,37 @@ public class BeaconScanner implements IScanner {
     private long beaconExpirationDurationMillis;
 
     private BeaconScanner(@NonNull IBleDevice bleDevice,
+                          @NonNull ScanExecutorProvider scheduledExecutorProvider,
                           @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
         this.scanDuration = scanDuration;
-        this.handler = new Handler(new HandlerCallback());
+        this.uiHandler = new Handler();
+        this.scheduledExecutorProvider = scheduledExecutorProvider;
+        this.scheduledExecutor = scheduledExecutorProvider.provide();
     }
 
     @Override
     public void start() {
-        handler.sendMessage(
-            handler.obtainMessage(MESSAGE_RESUME_SCANS)
+        scheduledExecutor.schedule(
+            scanResumeJob,
+            0L,
+            TimeUnit.MILLISECONDS
         );
 
-        handler.sendMessageDelayed(
-            handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
-            BEACON_EVICTION_PERIODICITY_MILLIS
+        scheduledExecutor.scheduleAtFixedRate(
+            beaconsEvictionJob,
+            scanDuration.scanDurationMillis,
+            BEACON_EVICTION_PERIODICITY_MILLIS,
+            TimeUnit.MILLISECONDS
         );
     }
 
     @Override
     public void stop() {
-       handler.sendMessageAtFrontOfQueue(
-           handler.obtainMessage(MESSAGE_STOP_SCANS)
+       scheduledExecutor.schedule(
+           scanStopJob,
+           0L,
+           TimeUnit.MILLISECONDS
        );
     }
 
@@ -91,9 +102,7 @@ public class BeaconScanner implements IScanner {
             }
         }
 
-        if (beaconListener != null) {
-            beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
-        }
+        uiHandler.post(deliverBeaconsJob);
     }
 
     public static final class Builder {
@@ -107,6 +116,13 @@ public class BeaconScanner implements IScanner {
         private IBleDevice bleDevice = null;
 
         private ScanDuration scanDuration = ScanDuration.UNIFORM;
+
+        private ScanExecutorProvider scanTasksExecutorProvider = new ScanExecutorProvider() {
+            @Override
+            public ScheduledExecutorService provide() {
+                return newSingleThreadScheduledExecutor();
+            }
+        };
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
@@ -141,6 +157,12 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
+        @VisibleForTesting
+        Builder setScanTasksExecutor(@NonNull ScanExecutorProvider scanTasksExecutorProvider) {
+            this.scanTasksExecutorProvider = scanTasksExecutorProvider;
+            return this;
+        }
+
         public BeaconScanner build() {
             if (beaconExpirationDurationSeconds < 1) {
                 throw new AssertionError("Beacon validity duration has to be positive; "
@@ -150,7 +172,7 @@ public class BeaconScanner implements IScanner {
             final BeaconScanner scanner;
 
             if (bleDevice != null) {
-                scanner = new BeaconScanner(bleDevice, scanDuration);
+                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
             } else {
                 final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -171,7 +193,7 @@ public class BeaconScanner implements IScanner {
                     RegionDefinitionMapper.asScanFilters(definitions)
                 );
 
-                scanner = new BeaconScanner(bleDevice, scanDuration);
+                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
             }
 
             scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
@@ -183,65 +205,73 @@ public class BeaconScanner implements IScanner {
         }
     }
 
-    private final class HandlerCallback implements Handler.Callback {
-
+    private final Runnable deliverBeaconsJob = new Runnable() {
         @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            switch (msg.what) {
-                case MESSAGE_RESUME_SCANS:
-                    BeaconLogger.d("BLE scans resumed...");
-
-                    bleDevice.startScans(scanCallback);
-
-                    handler.sendMessageDelayed(
-                        handler.obtainMessage(MESSAGE_PAUSE_SCANS),
-                        scanDuration.scanDurationMillis
-                    );
-
-                    break;
-
-                case MESSAGE_PAUSE_SCANS:
-                    BeaconLogger.d("BLE scans paused...");
-
-                    bleDevice.stopScans(scanCallback);
-
-                    handler.sendMessageDelayed(
-                        handler.obtainMessage(MESSAGE_RESUME_SCANS),
-                        scanDuration.restDurationMillis
-                    );
-
-                    break;
-
-                case MESSAGE_STOP_SCANS:
-                    BeaconLogger.d("BLE scans stopped");
-
-                    bleDevice.stopScans(scanCallback);
-
-                    handler.removeCallbacksAndMessages(null);
-
-                    break;
-
-                case MESSAGE_EVICT_OUTDATED_BEACONS:
-                    BeaconLogger.d("Beacons eviction started");
-
-                    evictOutdatedBeacons();
-
-                    BeaconLogger.d("Beacons eviction completed");
-
-                    handler.sendMessageDelayed(
-                        handler.obtainMessage(MESSAGE_EVICT_OUTDATED_BEACONS),
-                        BEACON_EVICTION_PERIODICITY_MILLIS
-                    );
-
-                    break;
-
-                default:
-                    break;
+        public void run() {
+            if (beaconListener != null) {
+                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
             }
-
-            return true;
         }
-    }
+    };
+
+    private final Runnable scanResumeJob = new Runnable() {
+        @Override
+        public void run() {
+            BeaconLogger.d("BLE scans resumed... ");
+
+            bleDevice.startScans(scanCallback);
+
+            scheduledExecutor.schedule(
+                scanPauseJob,
+                scanDuration.scanDurationMillis,
+                TimeUnit.MILLISECONDS
+            );
+        }
+    };
+
+    private final Runnable scanPauseJob = new Runnable() {
+        @Override
+        public void run() {
+            BeaconLogger.d("BLE scans paused...");
+
+            bleDevice.stopScans(scanCallback);
+
+            scheduledExecutor.schedule(
+                scanResumeJob,
+                scanDuration.restDurationMillis,
+                TimeUnit.MILLISECONDS
+            );
+        }
+    };
+
+    private final Runnable scanStopJob = new Runnable() {
+        @Override
+        public void run() {
+            BeaconLogger.d("BLE scans stopped");
+
+            bleDevice.stopScans(scanCallback);
+
+            scheduledExecutor.shutdownNow();
+
+            try {
+                scheduledExecutor = scheduledExecutorProvider.provide();
+            } catch (Exception e) {
+                BeaconLogger.e("Can not create a new schedulerExecutor due to " + e + "; scans "
+                    + "most likely will not be resumed");
+            }
+        }
+    };
+
+    private final Runnable beaconsEvictionJob = new Runnable() {
+        @Override
+        public void run() {
+            BeaconLogger.d("Beacons eviction started");
+
+            evictOutdatedBeacons();
+
+            BeaconLogger.d("Beacons eviction completed");
+        }
+    };
 
     private final class BeaconScanCallback extends ScanCallback {
 
