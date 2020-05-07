@@ -4,6 +4,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 
+import org.jmock.lib.concurrent.DeterministicScheduler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -12,6 +13,8 @@ import org.robolectric.annotation.Config;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +26,17 @@ import static org.junit.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
 public class BeaconScannerTest {
+
+    // By using the DeterministicScheduler from jmock we can rely on the virtual time instead of
+    // the real time, which makes our tests less error-prone and much faster to run.
+    private final DeterministicScheduler executorService = new DeterministicScheduler();
+
+    private final ScanExecutorProvider executorProvider = new ScanExecutorProvider() {
+        @Override
+        public ScheduledExecutorService provide() {
+            return executorService;
+        }
+    };
 
     @Test(expected = AssertionError.class)
     public void testNegativeBeaconValidityDurationIsNotAccepted() {
@@ -40,13 +54,18 @@ public class BeaconScannerTest {
         final BeaconScanner scanner = new BeaconScanner
             .Builder()
             .setBleDevice(bleDevice)
+            .setScanTasksExecutor(executorProvider)
             .build();
 
         // when
         scanner.start();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
         scanner.stop();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
         scanner.start();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
         scanner.stop();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
 
         // then
         assertEquals(2, bleDevice.starts);
@@ -68,6 +87,7 @@ public class BeaconScannerTest {
             .Builder()
             .setBleDevice(bleDevice)
             .setBeaconListener(beaconListener)
+            .setScanTasksExecutor(executorProvider)
             .build();
 
         final String bluetoothAddress = "00:11:22:33:FF:EE";
@@ -85,7 +105,9 @@ public class BeaconScannerTest {
 
         // when
         scanner.start();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
         bleDevice.transmitScanResult(scanResult);
+        executorService.tick(10, TimeUnit.MILLISECONDS);
         scanner.stop();
 
         // then
