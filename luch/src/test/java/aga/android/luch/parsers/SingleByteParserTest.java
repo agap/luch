@@ -2,10 +2,7 @@ package aga.android.luch.parsers;
 
 import org.junit.Test;
 
-import java.util.Collection;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
+import static org.junit.Assert.assertEquals;
 
 public class SingleByteParserTest {
 
@@ -23,15 +20,15 @@ public class SingleByteParserTest {
     }
 
     @Test
-    public void testMaskIsCorrect() {
+    public void testFieldLengthIsCorrect() {
 
-        // given
-        final Collection<Byte> mask = parser.getMask();
+        // when
+        final int length = parser.getFieldLength();
 
         // then
-        assertThat(
-            mask,
-            contains((byte) 1)
+        assertEquals(
+            1,
+            length
         );
     }
 }

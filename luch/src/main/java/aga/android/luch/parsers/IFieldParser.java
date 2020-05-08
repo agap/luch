@@ -1,7 +1,5 @@
 package aga.android.luch.parsers;
 
-import java.util.Collection;
-
 import androidx.annotation.NonNull;
 
 public interface IFieldParser<T> {
@@ -17,9 +15,9 @@ public interface IFieldParser<T> {
     T parse(@NonNull byte[] packet, int start) throws BeaconParseException;
 
     /**
-     * Returns an <b>unmodifiable<b/> collection of the field's mask to be used during the
-     * construction of a {@link android.bluetooth.le.ScanFilter} object
-     * @return mask
+     * Returns the field length to be used during the construction of
+     * a {@link android.bluetooth.le.ScanFilter} object
+     * @return length
      */
-    Collection<Byte> getMask();
+    int getFieldLength();
 }

@@ -2,12 +2,9 @@ package aga.android.luch.parsers;
 
 import org.junit.Test;
 
-import java.util.Collection;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public class UuidFieldParserTest {
 
@@ -25,20 +22,15 @@ public class UuidFieldParserTest {
     }
 
     @Test
-    public void testMaskIsCorrect() {
+    public void testFieldLengthIsCorrect() {
 
         // when
-        final Collection<Byte> mask = parser.getMask();
+        final int length = parser.getFieldLength();
 
         // then
-        assertThat(
-            mask,
-            contains(
-                (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-                (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-                (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-                (byte) 1, (byte) 1, (byte) 1, (byte) 1
-            )
+        assertEquals(
+            16,
+            length
         );
     }
 

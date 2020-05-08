@@ -1,25 +1,13 @@
 package aga.android.luch.parsers;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
 
 import static aga.android.luch.Conversions.byteArrayToHexString;
-import static java.util.Collections.unmodifiableCollection;
 
 public class UuidFieldParser implements IFieldParser<UUID> {
-
-    private final Collection<Byte> MASK = unmodifiableCollection(
-        Arrays.asList(
-            (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-            (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-            (byte) 1, (byte) 1, (byte) 1, (byte) 1,
-            (byte) 1, (byte) 1, (byte) 1, (byte) 1
-        )
-    );
 
     @Override
     public UUID parse(@NonNull byte[] packet, int start) throws BeaconParseException {
@@ -36,7 +24,7 @@ public class UuidFieldParser implements IFieldParser<UUID> {
     }
 
     @Override
-    public Collection<Byte> getMask() {
-        return MASK;
+    public int getFieldLength() {
+        return 16;
     }
 }

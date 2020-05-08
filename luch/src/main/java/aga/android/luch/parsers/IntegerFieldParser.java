@@ -1,20 +1,10 @@
 package aga.android.luch.parsers;
 
-import java.util.Collection;
-
 import androidx.annotation.NonNull;
 
 import static aga.android.luch.Conversions.byteArrayToHexString;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableCollection;
 
 public class IntegerFieldParser implements IFieldParser<Integer> {
-
-    private static final Collection<Byte> MASK = unmodifiableCollection(
-        asList(
-            (byte) 1, (byte) 1
-        )
-    );
 
     @Override
     public Integer parse(@NonNull byte[] packet, int start) throws BeaconParseException {
@@ -30,7 +20,7 @@ public class IntegerFieldParser implements IFieldParser<Integer> {
     }
 
     @Override
-    public Collection<Byte> getMask() {
-        return MASK;
+    public int getFieldLength() {
+        return 2;
     }
 }
