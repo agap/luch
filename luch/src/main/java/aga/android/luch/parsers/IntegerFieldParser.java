@@ -23,7 +23,7 @@ public class IntegerFieldParser implements IFieldParser<Integer> {
         } catch (Exception e) {
             throw new BeaconParseException(
                 "Could not parse the integer from the data packet " + byteArrayToHexString(packet)
-                    + "(starting byte index is " + start + "; expected to see 2 bytes)",
+                    + " (starting byte index is " + start + "; expected to see 2 bytes)",
                 e
             );
         }

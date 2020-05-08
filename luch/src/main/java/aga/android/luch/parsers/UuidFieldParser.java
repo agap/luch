@@ -29,7 +29,7 @@ public class UuidFieldParser implements IFieldParser<UUID> {
         } catch (Exception e) {
             throw new BeaconParseException(
                 "Could not parse the UUID from the data packet " + byteArrayToHexString(packet)
-                    + "(starting byte index is " + start + "; expected to see 16 bytes)",
+                    + " (starting byte index is " + start + "; expected to see 16 bytes)",
                 e
             );
         }
