@@ -5,7 +5,7 @@ import androidx.annotation.Size;
 
 import static java.lang.Character.digit;
 
-class Conversions {
+public class Conversions {
 
     private static final char[] HEX_ARRAY = {
         '0', '1', '2', '3',
@@ -32,14 +32,9 @@ class Conversions {
         return result;
     }
 
+    // todo move into UuidFieldParser
     static String byteArrayToUuidString(@NonNull @Size(min = 16, max = 16) byte[] uuid) {
-        final StringBuilder stringBuilder = new StringBuilder(uuid.length * 2 + 4);
-
-        for (int j = 0; j < uuid.length; j++) {
-            final int v = uuid[j] & 0xFF;
-            stringBuilder.insert(j * 2, HEX_ARRAY[v >>> 4]);
-            stringBuilder.insert(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
-        }
+        final StringBuilder stringBuilder = byteArrayToHexStringBuilder(uuid);
 
         stringBuilder.insert(8, '-');
         stringBuilder.insert(13, '-');
@@ -47,6 +42,22 @@ class Conversions {
         stringBuilder.insert(23, '-');
 
         return stringBuilder.toString();
+    }
+
+    public static String byteArrayToHexString(@NonNull byte[] bytes) {
+        return byteArrayToHexStringBuilder(bytes).toString();
+    }
+
+    private static StringBuilder byteArrayToHexStringBuilder(@NonNull byte[] bytes) {
+        final StringBuilder stringBuilder = new StringBuilder(bytes.length * 2 + 4);
+
+        for (int j = 0; j < bytes.length; j++) {
+            final int v = bytes[j] & 0xFF;
+            stringBuilder.insert(j * 2, HEX_ARRAY[v >>> 4]);
+            stringBuilder.insert(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
+        }
+
+        return stringBuilder;
     }
 
     static int byteArrayToInteger(@NonNull @Size(min = 2, max = 2) byte[] byteArray) {
