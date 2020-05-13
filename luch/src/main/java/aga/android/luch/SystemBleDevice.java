@@ -5,6 +5,8 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
+import android.content.pm.PackageManager;
 
 import java.util.List;
 
@@ -18,16 +20,28 @@ class SystemBleDevice implements IBleDevice {
 
     private final List<ScanFilter> scanFilters;
 
-    SystemBleDevice(BluetoothAdapter bluetoothAdapter,
+    private final Context context;
+
+    SystemBleDevice(Context context,
+                    BluetoothAdapter bluetoothAdapter,
                     ScanSettings scanSettings,
                     List<ScanFilter> scanFilters) {
         this.bluetoothAdapter = bluetoothAdapter;
         this.scanSettings = scanSettings;
         this.scanFilters = scanFilters;
+        this.context = context.getApplicationContext();
     }
 
     @Override
     public void startScans(@NonNull ScanCallback scanCallback) {
+        if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            BeaconLogger.e(
+                "BLE is missing on that device; BLE scans won't be started"
+            );
+
+            return;
+        }
+
         // On Android 5.0 the behaviour of BluetoothAdapter/BluetoothLeScanner is different
         // from subsequent releases - BluetoothAdapter.getBluetoothLeScanner() returns non-nullable
         // reference even if Bluetooth is disabled, but an attempt to call startScan/stopScan on it

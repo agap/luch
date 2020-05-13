@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.pm.PackageManager;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,10 +16,13 @@ import org.robolectric.annotation.Config;
 import java.util.Collections;
 import java.util.List;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
@@ -39,7 +43,10 @@ public class SystemBleDeviceTest {
         }
     };
 
+    private final PackageManager packageManager = getApplicationContext().getPackageManager();
+
     private final SystemBleDevice device = new SystemBleDevice(
+        getApplicationContext(),
         adapter,
         scanSettings,
         scanFilters
@@ -51,6 +58,7 @@ public class SystemBleDeviceTest {
         // given
         when(adapter.getBluetoothLeScanner()).thenReturn(scanner);
         when(adapter.isEnabled()).thenReturn(true);
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
 
         // when
         device.startScans(scanCallback);
@@ -80,6 +88,7 @@ public class SystemBleDeviceTest {
         // given
         when(adapter.getBluetoothLeScanner()).thenReturn(null);
         when(adapter.isEnabled()).thenReturn(true);
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
 
         // when
         device.startScans(scanCallback);
@@ -109,6 +118,7 @@ public class SystemBleDeviceTest {
     public void testNoScansAreStartedIfBluetoothAdapterIsDisabled() {
         // given
         when(adapter.isEnabled()).thenReturn(false);
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
 
         // when
         device.startScans(scanCallback);
@@ -129,5 +139,17 @@ public class SystemBleDeviceTest {
         // then
         verify(adapter).isEnabled();
         verifyNoMoreInteractions(adapter);
+    }
+
+    @Test
+    public void testNoAttemptToStartScansIfBleFeatureIsMissing() {
+        // given
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, false);
+
+        // when
+        device.startScans(scanCallback);
+
+        // then
+        verifyZeroInteractions(scanner);
     }
 }
