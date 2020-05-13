@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 
@@ -117,12 +118,18 @@ public class BeaconScanner implements IScanner {
 
         private ScanDuration scanDuration = ScanDuration.UNIFORM;
 
+        private final Context context;
+
         private ScanExecutorProvider scanTasksExecutorProvider = new ScanExecutorProvider() {
             @Override
             public ScheduledExecutorService provide() {
                 return newSingleThreadScheduledExecutor();
             }
         };
+
+        public Builder(@NonNull Context context) {
+            this.context = context;
+        }
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
@@ -169,11 +176,7 @@ public class BeaconScanner implements IScanner {
                         + "actual value is: " + beaconExpirationDurationSeconds + " seconds");
             }
 
-            final BeaconScanner scanner;
-
-            if (bleDevice != null) {
-                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
-            } else {
+            if (bleDevice == null) {
                 final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
                 if (bluetoothAdapter == null) {
@@ -187,14 +190,19 @@ public class BeaconScanner implements IScanner {
                     scanSettingsBuilder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
                 }
 
-                final IBleDevice bleDevice = new SystemBleDevice(
+                bleDevice = new SystemBleDevice(
+                    context,
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
                     RegionDefinitionMapper.asScanFilters(definitions)
                 );
-
-                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
             }
+
+            final BeaconScanner scanner = new BeaconScanner(
+                bleDevice,
+                scanTasksExecutorProvider,
+                scanDuration
+            );
 
             scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
                 beaconExpirationDurationSeconds

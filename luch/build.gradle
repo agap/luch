@@ -44,6 +44,7 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
 
+    testImplementation 'androidx.test:core:1.0.0'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.jmock:jmock-junit4:2.12.0'
     testImplementation 'org.robolectric:robolectric:4.1'

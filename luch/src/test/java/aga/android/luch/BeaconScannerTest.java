@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.test.core.app.ApplicationProvider;
 
 import static aga.android.luch.TestHelpers.createScanResult;
 import static java.util.Collections.singleton;
@@ -41,7 +42,7 @@ public class BeaconScannerTest {
     @Test(expected = AssertionError.class)
     public void testNegativeBeaconValidityDurationIsNotAccepted() {
         new BeaconScanner
-            .Builder()
+            .Builder(ApplicationProvider.getApplicationContext())
             .setBeaconExpirationDuration(-1)
             .build();
     }
@@ -52,7 +53,7 @@ public class BeaconScannerTest {
         final CountingFakeBleDevice bleDevice = new CountingFakeBleDevice();
 
         final BeaconScanner scanner = new BeaconScanner
-            .Builder()
+            .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
             .setScanTasksExecutor(executorProvider)
             .build();
@@ -84,7 +85,7 @@ public class BeaconScannerTest {
         final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
 
         final BeaconScanner scanner = new BeaconScanner
-            .Builder()
+            .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
             .setBeaconListener(beaconListener)
             .setScanTasksExecutor(executorProvider)

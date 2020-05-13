@@ -6,16 +6,17 @@ import aga.android.luch.IBeaconListener
 import aga.android.luch.IScanner
 import aga.android.luch.ScanDuration
 import android.annotation.SuppressLint
+import android.app.Application
 import android.os.Build
 import androidx.lifecycle.LiveData
 
-class BeaconLiveData : LiveData<Set<Beacon>>() {
+class BeaconLiveData(application: Application) : LiveData<Set<Beacon>>() {
 
     private val listener: IBeaconListener = IBeaconListener { beacons ->
         value = beacons
     }
 
-    private val scanner: IScanner = BeaconScanner.Builder()
+    private val scanner: IScanner = BeaconScanner.Builder(application)
         .setBeaconExpirationDuration(10)
         .setScanDuration(
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
