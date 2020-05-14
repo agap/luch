@@ -2,57 +2,58 @@ package aga.android.luch.parsers;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 public class IntegerFieldParserTest {
 
     private final IntegerFieldParser parser = new IntegerFieldParser();
 
-    @Test(expected = BeaconParseException.class)
-    public void testNotHavingEnoughDataToParseThrowsBeaconParseException()
-        throws BeaconParseException {
+    @Test(expected = Exception.class)
+    public void testNotHavingEnoughDataToParseThrowsException() {
 
         // given
-        final byte[] packet = new byte[3];
+        final List<Byte> packet = new ArrayList<>(
+            singletonList((byte) 0x01)
+        ) ;
 
         // when
-        parser.consume(packet, 2);
+        parser.consume(packet);
     }
 
     @Test
-    public void testFieldLengthIsCorrect() {
+    public void testZeroByteSequenceToIntegerConversion() {
 
-        // when
-        final int length = parser.getFieldLength();
-
-        // then
-        assertEquals(
-            2,
-            length
+        // given
+        final List<Byte> packet = new ArrayList<>(
+            asList(
+                (byte) 0x00, (byte) 0x00, (byte) 0x10
+            )
         );
-    }
-
-    @Test
-    public void testZeroByteSequenceToIntegerConversion() throws BeaconParseException {
-
-        // given
-        final byte[] packet = {0x00, 0x15, (byte) 0xFF, (byte) 0x00, (byte) 0x00};
 
         // when
-        final int result = parser.consume(packet, 3);
+        final int result = parser.consume(packet);
 
         // then
         assertEquals(0, result);
     }
 
     @Test
-    public void testByteSequenceRepresenting65535ToIntegerConversion() throws BeaconParseException {
+    public void testByteSequenceRepresenting65535ToIntegerConversion() {
 
         // given
-        final byte[] packet = {0x00, 0x15, (byte) 0xFF, (byte) 0xFF, (byte) 0xA0};
+        final List<Byte> packet = new ArrayList<>(
+            asList(
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xA0
+            )
+        );
 
         // when
-        final int result = parser.consume(packet, 2);
+        final int result = parser.consume(packet);
 
         // then
         assertEquals(65535, result);

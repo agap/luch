@@ -89,10 +89,11 @@ public final class BeaconParser implements IBeaconParser {
                     identifiers
                 );
 
-            } catch (BeaconParseException e) {
+            } catch (Exception e) {
                 BeaconLogger.e(
-                    "Could not parse the following manufacturerData: "
-                            + byteArrayToHexString(rawBytes)
+                    "An attempt to parse the following manufacturerData: "
+                        + byteArrayToHexString(rawBytes) + " have resulted in the following "
+                        + "exception: " + e.toString()
                 );
             }
         }
@@ -128,7 +129,7 @@ public final class BeaconParser implements IBeaconParser {
 
     @NonNull
     private ScanFilter getScanFilter(@NonNull RegionDefinition regionDefinition)
-            throws BeaconParseException {
+            throws RegionDefinitionConversionException {
 
         final List<Byte> mask = getMask(regionDefinition, MASK_PRODUCER);
         final List<Byte> filter = getMask(regionDefinition, FILTER_PRODUCER);
@@ -153,7 +154,7 @@ public final class BeaconParser implements IBeaconParser {
     @NonNull
     private List<Byte> getMask(@NonNull RegionDefinition regionDefinition,
                                @NonNull ByteProducer byteProducer)
-            throws BeaconParseException {
+            throws RegionDefinitionConversionException {
 
         final List<Byte> data = new ArrayList<>();
 
@@ -174,7 +175,7 @@ public final class BeaconParser implements IBeaconParser {
         void produce(List<Byte> packet,
                      Object field,
                      int position,
-                     IFieldParser parser) throws BeaconParseException;
+                     IFieldParser parser) throws RegionDefinitionConversionException;
     }
 
     private static final ByteProducer FILTER_PRODUCER = new ByteProducer() {
@@ -182,7 +183,7 @@ public final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldParser parser) throws BeaconParseException {
+                            IFieldParser parser) throws RegionDefinitionConversionException {
 
             if (field == null) {
                 parser.insertMask(packet, (byte) 0x00);
@@ -190,7 +191,7 @@ public final class BeaconParser implements IBeaconParser {
                 //noinspection unchecked
                 parser.insert(packet, field);
             } else {
-                throw new BeaconParseException(
+                throw new RegionDefinitionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
                         + IFieldParser.class + ", while the RegionDefinition object has "
                         + "an incompatible field (" + field
@@ -205,7 +206,7 @@ public final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldParser parser) throws BeaconParseException {
+                            IFieldParser parser) throws RegionDefinitionConversionException {
 
             final byte maskByte;
 
@@ -214,7 +215,7 @@ public final class BeaconParser implements IBeaconParser {
             } else if (parser.canParse(field.getClass())) {
                 maskByte = 0x01;
             } else {
-                throw new BeaconParseException(
+                throw new RegionDefinitionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
                             + IFieldParser.class + ", while the RegionDefinition object has "
                             + "an incompatible field (" + field

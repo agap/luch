@@ -2,80 +2,89 @@ package aga.android.luch.parsers;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
 
 public class UuidFieldParserTest {
 
     private final UuidFieldParser parser = new UuidFieldParser();
 
-    @Test(expected = BeaconParseException.class)
-    public void testNotHavingEnoughDataToParseThrowsBeaconParseException()
-        throws BeaconParseException {
+    @Test(expected = Exception.class)
+    public void testNotHavingEnoughDataToParseThrowsBeaconParseException() {
 
         // given
-        final byte[] packet = new byte[15];
+        final List<Byte> packet = new ArrayList<>(
+            asList(
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00
+            )
+        );
 
         // when
-        parser.consume(packet, 0);
+        parser.consume(packet);
     }
 
     @Test
-    public void testFieldLengthIsCorrect() {
+    public void testAllBytesZeroToUuidParsingIsCorrect() {
+
+        // given
+        final List<Byte> packet = new ArrayList<>(
+            asList(
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0xFF
+            )
+        );
 
         // when
-        final int length = parser.getFieldLength();
+        final UUID uuid = parser.consume(packet);
 
         // then
         assertEquals(
-            16,
-            length
+            fromString("00000000-0000-0000-0000-000000000000"),
+            uuid
+        );
+        assertEquals(
+            singletonList((byte) 0xFF),
+            packet
         );
     }
 
     @Test
-    public void testAllBytesZeroToUuidParsingIsCorrect() throws BeaconParseException {
+    public void testAllBytesFFToUuidParsingIsCorrect() {
 
         // given
-        final byte[] packet = {
-            0x02, (byte) 0xFE, 0x14, 0x77,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            (byte) 0xAE, (byte) 0xEA
-        };
+        final List<Byte> packet = new ArrayList<>(
+            asList(
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+                (byte) 0xFE, (byte) 0x12, (byte) 0x00
+            )
+        );
 
         // when
-        final UUID uuid = parser.consume(packet, 4);
+        final UUID uuid = parser.consume(packet);
 
         // then
         assertEquals(
-            UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            fromString("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"),
             uuid
         );
-    }
-
-    @Test
-    public void testAllBytesFFToUuidParsingIsCorrect() throws BeaconParseException {
-
-        // given
-        final byte[] packet = {
-            0x02, (byte) 0xFE, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, 0x00
-        };
-
-        // when
-        final UUID uuid = parser.consume(packet, 2);
-
-        // then
         assertEquals(
-            UUID.fromString("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"),
-            uuid
+            asList((byte) 0xFE, (byte) 0x12, (byte) 0x00),
+            packet
         );
     }
 }

@@ -14,24 +14,14 @@ public class UuidFieldParser implements IFieldParser<UUID> {
     private final byte[] bytes = new byte[UUID_BYTE_SIZE];
 
     @Override
-    public UUID consume(@NonNull List<Byte> packet) throws BeaconParseException {
-        try {
-            for (int i = 0; i < UUID_BYTE_SIZE; i++) {
-                bytes[i] = packet.remove(0);
-            }
-
-            final ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-
-            return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
-        } catch (Exception e) {
-            //todo handle higher
-            throw new BeaconParseException(
-                "Could not parse the UUID from the data packet ",
-//                        + byteArrayToHexString(packet)
-//                    + " (starting byte index is " + start + "; expected to see 16 bytes)",
-                e
-            );
+    public UUID consume(@NonNull List<Byte> packet) {
+        for (int i = 0; i < UUID_BYTE_SIZE; i++) {
+            bytes[i] = packet.remove(0);
         }
+
+        final ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+
+        return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
     }
 
     @Override
