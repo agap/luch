@@ -11,9 +11,9 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
 
-public class UuidFieldParserTest {
+public class UuidFieldConverterTest {
 
-    private final UuidFieldParser parser = new UuidFieldParser();
+    private final UuidFieldConverter parser = new UuidFieldConverter();
 
     @Test(expected = Exception.class)
     public void testNotHavingEnoughDataToParseThrowsBeaconParseException() {

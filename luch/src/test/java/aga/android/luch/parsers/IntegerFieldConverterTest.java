@@ -9,9 +9,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
-public class IntegerFieldParserTest {
+public class IntegerFieldConverterTest {
 
-    private final IntegerFieldParser parser = new IntegerFieldParser();
+    private final IntegerFieldConverter parser = new IntegerFieldConverter();
 
     @Test(expected = Exception.class)
     public void testNotHavingEnoughDataToParseThrowsException() {

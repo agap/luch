@@ -5,9 +5,9 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
-public class SingleByteParserTest {
+public class SingleByteConverterTest {
 
-    private final SingleByteFieldParser parser = new SingleByteFieldParser();
+    private final SingleByteFieldConverter parser = new SingleByteFieldConverter();
 
     @Test(expected = Exception.class)
     public void testNotHavingEnoughDataToParseThrowsException() {

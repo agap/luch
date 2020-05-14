@@ -4,7 +4,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 
-public class IntegerFieldParser implements IFieldParser<Integer> {
+class IntegerFieldConverter implements IFieldConverter<Integer> {
 
     @Override
     public Integer consume(@NonNull List<Byte> packet) {

@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 
-public class UuidFieldParser implements IFieldParser<UUID> {
+class UuidFieldConverter implements IFieldConverter<UUID> {
 
     private static final int UUID_BYTE_SIZE = 16;
 

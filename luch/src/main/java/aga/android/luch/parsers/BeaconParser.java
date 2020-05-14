@@ -28,13 +28,13 @@ public final class BeaconParser implements IBeaconParser {
         0xff
     );
 
-    private final IntegerFieldParser beaconTypeParser = new IntegerFieldParser();
+    private final IntegerFieldConverter beaconTypeParser = new IntegerFieldConverter();
 
-    private final List<IFieldParser> fieldParsers = new ArrayList<>();
+    private final List<IFieldConverter> fieldParsers = new ArrayList<>();
 
     private final int manufacturerId;
 
-    private BeaconParser(@NonNull List<? extends IFieldParser> fieldParsers,
+    private BeaconParser(@NonNull List<? extends IFieldConverter> fieldParsers,
                          int manufacturerId) {
         this.fieldParsers.addAll(fieldParsers);
         this.manufacturerId = manufacturerId;
@@ -45,10 +45,10 @@ public final class BeaconParser implements IBeaconParser {
         // todo add actual parsing
         return new BeaconParser(
             asList(
-                new UuidFieldParser(),
-                new IntegerFieldParser(),
-                new IntegerFieldParser(),
-                new SingleByteFieldParser()
+                new UuidFieldConverter(),
+                new IntegerFieldConverter(),
+                new IntegerFieldConverter(),
+                new SingleByteFieldConverter()
             ),
             manufacturerId
         );
@@ -77,7 +77,7 @@ public final class BeaconParser implements IBeaconParser {
 
                 //todo validate the beacon type
 
-                for (IFieldParser parser : fieldParsers) {
+                for (IFieldConverter parser : fieldParsers) {
                     //noinspection unchecked
                     identifiers.add(
                         parser.consume(bytesList)
@@ -146,7 +146,7 @@ public final class BeaconParser implements IBeaconParser {
 
     /**
      * Creates a beacon advertisement mask to be used in {@link android.bluetooth.le.ScanFilter}
-     * based on the {@link IFieldParser} it contains
+     * based on the {@link IFieldConverter} it contains
      * @param regionDefinition the definition of the region to scan for; the existence or absence
      *                         of certain fields in the definition will affect the mask
      * @return byte mask
@@ -161,7 +161,7 @@ public final class BeaconParser implements IBeaconParser {
         beaconTypeParser.insertMask(data, ((byte) 0));
 
         for (int i = 0; i < fieldParsers.size(); i++) {
-            final IFieldParser parser = fieldParsers.get(i);
+            final IFieldConverter parser = fieldParsers.get(i);
             final Object field = regionDefinition.getFieldAt(i);
 
             byteProducer.produce(data, field, i, parser);
@@ -175,7 +175,7 @@ public final class BeaconParser implements IBeaconParser {
         void produce(List<Byte> packet,
                      Object field,
                      int position,
-                     IFieldParser parser) throws RegionDefinitionConversionException;
+                     IFieldConverter parser) throws RegionDefinitionConversionException;
     }
 
     private static final ByteProducer FILTER_PRODUCER = new ByteProducer() {
@@ -183,7 +183,7 @@ public final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldParser parser) throws RegionDefinitionConversionException {
+                            IFieldConverter parser) throws RegionDefinitionConversionException {
 
             if (field == null) {
                 parser.insertMask(packet, (byte) 0x00);
@@ -193,7 +193,7 @@ public final class BeaconParser implements IBeaconParser {
             } else {
                 throw new RegionDefinitionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
-                        + IFieldParser.class + ", while the RegionDefinition object has "
+                        + IFieldConverter.class + ", while the RegionDefinition object has "
                         + "an incompatible field (" + field
                         + ") in the same position. Check the beacon layout."
                 );
@@ -206,7 +206,7 @@ public final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldParser parser) throws RegionDefinitionConversionException {
+                            IFieldConverter parser) throws RegionDefinitionConversionException {
 
             final byte maskByte;
 
@@ -217,7 +217,7 @@ public final class BeaconParser implements IBeaconParser {
             } else {
                 throw new RegionDefinitionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
-                            + IFieldParser.class + ", while the RegionDefinition object has "
+                            + IFieldConverter.class + ", while the RegionDefinition object has "
                             + "an incompatible field (" + field
                             + ") in the same position. Check the beacon layout."
                 );

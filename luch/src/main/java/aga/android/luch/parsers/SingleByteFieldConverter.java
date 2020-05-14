@@ -4,7 +4,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 
-public class SingleByteFieldParser implements IFieldParser<Byte> {
+class SingleByteFieldConverter implements IFieldConverter<Byte> {
 
     @Override
     public Byte consume(@NonNull List<Byte> packet) {
