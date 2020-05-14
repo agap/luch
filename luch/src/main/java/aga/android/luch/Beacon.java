@@ -1,33 +1,59 @@
 package aga.android.luch;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-public class Beacon {
+public class Beacon implements IBeacon {
 
     @NonNull
+    @Deprecated
     private final String uuid;
 
     @NonNull
     private final String hardwareAddress;
 
+    @Deprecated
     private final int major;
 
+    @Deprecated
     private final int minor;
+
+    @NonNull
+    private final List beaconIdentifiers;
 
     private final int rssi;
 
-    Beacon(@NonNull String uuid,
+    public Beacon(@NonNull String uuid,
            @NonNull String hardwareAddress,
            int major,
            int minor,
-           int rssi) {
+           int rssi,
+           @NonNull List beaconIdentifiers) {
         this.uuid = uuid;
         this.hardwareAddress = hardwareAddress;
         this.major = major;
         this.minor = minor;
         this.rssi = rssi;
+        this.beaconIdentifiers = beaconIdentifiers;
+    }
+
+    @Nullable
+    @Override
+    public UUID getIdentifierAsUuid(int index) {
+        return ((UUID) beaconIdentifiers.get(index));
+    }
+
+    @Override
+    public int getIdentifierAsInt(int index) {
+        return ((Integer) beaconIdentifiers.get(index));
+    }
+
+    public byte getIdentifierAsByte(int index) {
+        return (byte) beaconIdentifiers.get(index);
     }
 
     @NonNull

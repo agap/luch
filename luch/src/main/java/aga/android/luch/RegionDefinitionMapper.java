@@ -17,6 +17,7 @@ import static aga.android.luch.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOfRange;
 
+@Deprecated
 class RegionDefinitionMapper {
 
     private static final int MANUFACTURER_ID = 76;
@@ -149,7 +150,8 @@ class RegionDefinitionMapper {
             scanResult.getDevice().getAddress(),
             major,
             minor,
-            scanResult.getRssi()
+            scanResult.getRssi(),
+            Collections.emptyList()
         );
     }
 }

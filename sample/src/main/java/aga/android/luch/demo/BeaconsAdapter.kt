@@ -19,10 +19,12 @@ class BeaconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         with(binding) {
             val resources = itemView.context.resources
 
-            beaconItemUuid.text  = beacon.uuid
-            beaconItemMajor.text = beacon.major.toString()
-            beaconItemMinor.text = beacon.minor.toString()
-            beaconItemRssi.text  = resources.getString(R.string.beacon_rssi_value, beacon.rssi)
+            beaconItemUuid.text  = beacon.getIdentifierAsUuid(0).toString()
+            beaconItemMajor.text = beacon.getIdentifierAsInt(1).toString()
+            beaconItemMinor.text = beacon.getIdentifierAsInt(2).toString()
+            beaconItemRssi.text  = resources.getString(
+                R.string.beacon_rssi_value, beacon.getIdentifierAsByte(3)
+            )
 
             beaconItemAddress.text = beacon.hardwareAddress
         }

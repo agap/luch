@@ -16,11 +16,11 @@ public final class BeaconLogger {
 
     }
 
-    static void d(@NonNull String message) {
+    public static void d(@NonNull String message) {
         logger.d(message);
     }
 
-    static void e(@NonNull String message) {
+    public static void e(@NonNull String message) {
         logger.e(message);
     }
 
@@ -48,7 +48,7 @@ public final class BeaconLogger {
         }
 
         @Override
-        void e(@NonNull String message) {
+        public void e(@NonNull String message) {
             // nothing to do here as well
         }
     }

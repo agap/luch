@@ -1,21 +1,31 @@
 package aga.android.luch;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class RegionDefinition {
 
+    @Deprecated
     @NonNull
     private final String uuid;
 
+    @Deprecated
     @Nullable
     private final Integer major;
 
+    @Deprecated
     @Nullable
     private final Integer minor;
 
-    public RegionDefinition(@NonNull String uuid,
+    private List regionFields = new ArrayList();
+
+    public RegionDefinition(@NonNull List regionFields,
+                            @NonNull String uuid,
                             @Nullable @IntRange(from = 0, to = 65535) Integer major,
                             @Nullable @IntRange(from = 0, to = 65535) Integer minor) {
 
@@ -40,8 +50,17 @@ public class RegionDefinition {
         this.minor = minor;
     }
 
+
     public RegionDefinition(String uuid) {
-        this(uuid, null, null);
+        this(Collections.singletonList(uuid), uuid, null, null);
+    }
+
+    public Object getFieldAt(int i) {
+        if (regionFields.size() > i) {
+            return regionFields.get(i);
+        } else {
+            return null;
+        }
     }
 
     @NonNull

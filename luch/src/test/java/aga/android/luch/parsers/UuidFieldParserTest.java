@@ -18,7 +18,7 @@ public class UuidFieldParserTest {
         final byte[] packet = new byte[15];
 
         // when
-        parser.parse(packet, 0);
+        parser.consume(packet, 0);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class UuidFieldParserTest {
         };
 
         // when
-        final UUID uuid = parser.parse(packet, 4);
+        final UUID uuid = parser.consume(packet, 4);
 
         // then
         assertEquals(
@@ -70,7 +70,7 @@ public class UuidFieldParserTest {
         };
 
         // when
-        final UUID uuid = parser.parse(packet, 2);
+        final UUID uuid = parser.consume(packet, 2);
 
         // then
         assertEquals(

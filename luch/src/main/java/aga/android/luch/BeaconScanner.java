@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import aga.android.luch.parsers.BeaconParser;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,6 +47,9 @@ public class BeaconScanner implements IScanner {
     private ScheduledExecutorService scheduledExecutor;
 
     @NonNull
+    private final BeaconParser beaconParser;
+
+    @NonNull
     private final Map<Beacon, Long> nearbyBeacons = new ConcurrentHashMap<>();
 
     @NonNull
@@ -55,8 +59,10 @@ public class BeaconScanner implements IScanner {
 
     private BeaconScanner(@NonNull IBleDevice bleDevice,
                           @NonNull ScanExecutorProvider scheduledExecutorProvider,
+                          @NonNull BeaconParser beaconParser,
                           @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
+        this.beaconParser = beaconParser;
         this.scanDuration = scanDuration;
         this.uiHandler = new Handler();
         this.scheduledExecutorProvider = scheduledExecutorProvider;
@@ -117,6 +123,8 @@ public class BeaconScanner implements IScanner {
 
         private ScanDuration scanDuration = ScanDuration.UNIFORM;
 
+        private BeaconParser beaconParser = BeaconParser.ALTBEACON_PARSER;
+
         private ScanExecutorProvider scanTasksExecutorProvider = new ScanExecutorProvider() {
             @Override
             public ScheduledExecutorService provide() {
@@ -151,6 +159,11 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
+        public Builder setBeaconParser(@NonNull BeaconParser beaconParser) {
+            this.beaconParser = beaconParser;
+            return this;
+        }
+
         @VisibleForTesting
         Builder setBleDevice(IBleDevice bleDevice) {
             this.bleDevice = bleDevice;
@@ -171,9 +184,7 @@ public class BeaconScanner implements IScanner {
 
             final BeaconScanner scanner;
 
-            if (bleDevice != null) {
-                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
-            } else {
+            if (bleDevice == null) {
                 final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
                 if (bluetoothAdapter == null) {
@@ -187,14 +198,19 @@ public class BeaconScanner implements IScanner {
                     scanSettingsBuilder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
                 }
 
-                final IBleDevice bleDevice = new SystemBleDevice(
+                bleDevice = new SystemBleDevice(
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
                     RegionDefinitionMapper.asScanFilters(definitions)
                 );
-
-                scanner = new BeaconScanner(bleDevice, scanTasksExecutorProvider, scanDuration);
             }
+
+            scanner = new BeaconScanner(
+                bleDevice,
+                scanTasksExecutorProvider,
+                beaconParser,
+                scanDuration
+            );
 
             scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
                 beaconExpirationDurationSeconds
@@ -283,7 +299,7 @@ public class BeaconScanner implements IScanner {
 
         @Override
         public void run() {
-            final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
+            final Beacon beacon = beaconParser.parse(scanResult);
 
             if (beacon == null) {
                 return;

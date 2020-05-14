@@ -16,7 +16,7 @@ public class IntegerFieldParserTest {
         final byte[] packet = new byte[3];
 
         // when
-        parser.parse(packet, 2);
+        parser.consume(packet, 2);
     }
 
     @Test
@@ -39,7 +39,7 @@ public class IntegerFieldParserTest {
         final byte[] packet = {0x00, 0x15, (byte) 0xFF, (byte) 0x00, (byte) 0x00};
 
         // when
-        final int result = parser.parse(packet, 3);
+        final int result = parser.consume(packet, 3);
 
         // then
         assertEquals(0, result);
@@ -52,7 +52,7 @@ public class IntegerFieldParserTest {
         final byte[] packet = {0x00, 0x15, (byte) 0xFF, (byte) 0xFF, (byte) 0xA0};
 
         // when
-        final int result = parser.parse(packet, 2);
+        final int result = parser.consume(packet, 2);
 
         // then
         assertEquals(65535, result);

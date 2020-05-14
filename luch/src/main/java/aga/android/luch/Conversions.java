@@ -1,5 +1,8 @@
 package aga.android.luch;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
@@ -69,5 +72,25 @@ public class Conversions {
             (byte) (value / 256),
             (byte) (value % 256)
         };
+    }
+
+    public static List<Byte> asList(@NonNull byte[] bytes) {
+        final List<Byte> list = new ArrayList<>();
+
+        for (Byte singleByte : bytes) {
+            list.add(singleByte);
+        }
+
+        return list;
+    }
+
+    public static byte[] asByteArray(@NonNull List<Byte> bytes) {
+        final byte[] array = new byte[bytes.size()];
+
+        for (int i = 0; i < bytes.size(); i++) {
+            array[i] = bytes.get(i);
+        }
+
+        return array;
     }
 }

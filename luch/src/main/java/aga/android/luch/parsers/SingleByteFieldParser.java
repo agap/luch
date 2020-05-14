@@ -1,19 +1,20 @@
 package aga.android.luch.parsers;
 
-import androidx.annotation.NonNull;
+import java.util.List;
 
-import static aga.android.luch.Conversions.byteArrayToHexString;
+import androidx.annotation.NonNull;
 
 public class SingleByteFieldParser implements IFieldParser<Byte> {
 
     @Override
-    public Byte parse(@NonNull byte[] packet, int start) throws BeaconParseException {
+    public Byte consume(@NonNull List<Byte> packet) throws BeaconParseException {
         try {
-            return packet[start];
+            return packet.remove(0);
         } catch (Exception e) {
+            // todo handle on the BeaconParser level for optimization purposes
             throw new BeaconParseException(
                 "Could not take the single byte from the data packet "
-                    + byteArrayToHexString(packet) + " (starting byte index is " + start
+//                    + byteArrayToHexString(packet) + " (starting byte index is " + start
                     + "; expected to see 1 byte)",
                 e
             );
@@ -21,7 +22,17 @@ public class SingleByteFieldParser implements IFieldParser<Byte> {
     }
 
     @Override
-    public int getFieldLength() {
-        return 1;
+    public void insert(@NonNull List<Byte> packet, @NonNull Byte value) {
+        packet.add(value);
+    }
+
+    @Override
+    public void insertMask(@NonNull List<Byte> packet, byte maskBit) {
+        packet.add(maskBit);
+    }
+
+    @Override
+    public boolean canParse(@NonNull Class clazz) {
+        return Byte.class.isAssignableFrom(clazz);
     }
 }

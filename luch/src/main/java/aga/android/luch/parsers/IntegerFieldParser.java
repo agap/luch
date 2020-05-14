@@ -1,26 +1,42 @@
 package aga.android.luch.parsers;
 
-import androidx.annotation.NonNull;
+import java.util.List;
 
-import static aga.android.luch.Conversions.byteArrayToHexString;
+import androidx.annotation.NonNull;
 
 public class IntegerFieldParser implements IFieldParser<Integer> {
 
     @Override
-    public Integer parse(@NonNull byte[] packet, int start) throws BeaconParseException {
+    public Integer consume(@NonNull List<Byte> packet) throws BeaconParseException {
         try {
-            return (packet[start] & 0xff) * 0x100 + (packet[start + 1] & 0xff);
+            final int mostSigBits = packet.remove(0);
+            final int leastSigBits = packet.remove(0);
+
+            return (mostSigBits & 0xff) * 0x100 + (leastSigBits & 0xff);
         } catch (Exception e) {
+            // todo handle at the BeaconParser level
             throw new BeaconParseException(
-                "Could not parse the integer from the data packet " + byteArrayToHexString(packet)
-                    + " (starting byte index is " + start + "; expected to see 2 bytes)",
+                "Could not parse the integer from the data packet ",
+//                    + byteArrayToHexString(packet),
                 e
             );
         }
     }
 
     @Override
-    public int getFieldLength() {
-        return 2;
+    public void insert(@NonNull List<Byte> packet, @NonNull Integer value) {
+        packet.add((byte) (value / 256));
+        packet.add((byte) (value / 256));
+    }
+
+    @Override
+    public void insertMask(@NonNull List<Byte> packet, byte maskBit) {
+        packet.add(maskBit);
+        packet.add(maskBit);
+    }
+
+    @Override
+    public boolean canParse(@NonNull Class clazz) {
+        return Integer.class.isAssignableFrom(clazz);
     }
 }

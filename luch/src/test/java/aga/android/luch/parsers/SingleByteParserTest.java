@@ -16,7 +16,7 @@ public class SingleByteParserTest {
         final byte[] packet = new byte[4];
 
         // when
-        parser.parse(packet, 4);
+        parser.consume(packet, 4);
     }
 
     @Test

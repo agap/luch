@@ -8,4 +8,8 @@ public class BeaconParseException extends Exception {
     public BeaconParseException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public BeaconParseException(String message) {
+        super(message);
+    }
 }
