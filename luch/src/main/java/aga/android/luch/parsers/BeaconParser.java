@@ -85,11 +85,7 @@ public final class BeaconParser implements IBeaconParser {
                 }
 
                 return new Beacon(
-                    "todo removeme", //todo remove me
                     scanResult.getDevice().getAddress(),
-                    0, //todo remove me
-                    0, //todo remove me
-                    scanResult.getRssi(),
                     identifiers
                 );
 
@@ -106,14 +102,14 @@ public final class BeaconParser implements IBeaconParser {
 
     @NonNull
     @Override
-    public List<ScanFilter> getScanFilters(@NonNull List<RegionDefinition> regionDefinitions) {
+    public List<ScanFilter> asScanFilters(@NonNull List<RegionDefinition> regionDefinitions) {
 
         final List<ScanFilter> scanFilters = new ArrayList<>();
 
         try {
             if (regionDefinitions.isEmpty()) {
                 scanFilters.add(
-                    getScanFilter(new RegionDefinition(emptyList(), "", null, null))
+                    getScanFilter(new RegionDefinition(emptyList()))
                 );
             } else {
                 for (RegionDefinition regionDefinition : regionDefinitions) {

@@ -201,7 +201,7 @@ public class BeaconScanner implements IScanner {
                 bleDevice = new SystemBleDevice(
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
-                    RegionDefinitionMapper.asScanFilters(definitions)
+                    beaconParser.asScanFilters(definitions)
                 );
             }
 

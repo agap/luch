@@ -16,5 +16,5 @@ public interface IBeaconParser {
     Beacon parse(@NonNull ScanResult scanResult);
 
     @NonNull
-    List<ScanFilter> getScanFilters(@NonNull List<RegionDefinition> regionDefinitions);
+    List<ScanFilter> asScanFilters(@NonNull List<RegionDefinition> regionDefinitions);
 }
