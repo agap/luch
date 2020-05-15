@@ -13,7 +13,6 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 
-import static aga.android.luch.Conversions.integerToByteArray;
 import static aga.android.luch.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
 
@@ -123,5 +122,12 @@ class TestHelpers {
         constructor.setAccessible(true);
 
         return constructor.newInstance(bluetoothAddress);
+    }
+
+    private static byte[] integerToByteArray(int value) {
+        return new byte[] {
+                (byte) (value / 256),
+                (byte) (value % 256)
+        };
     }
 }

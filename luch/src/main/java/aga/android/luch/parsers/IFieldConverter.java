@@ -35,7 +35,6 @@ interface IFieldConverter<T> {
      * @param packet the mask packet to append the mask bits to
      * @param maskBit the mask bit value (either 0 or 1)
      */
-    // todo add unit tests
     void insertMask(@NonNull List<Byte> packet, byte maskBit);
 
     /**

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Size;
 
 import static java.lang.Character.digit;
 
@@ -35,18 +34,6 @@ public class Conversions {
         return result;
     }
 
-    // todo move into UuidFieldParser
-    static String byteArrayToUuidString(@NonNull @Size(min = 16, max = 16) byte[] uuid) {
-        final StringBuilder stringBuilder = byteArrayToHexStringBuilder(uuid);
-
-        stringBuilder.insert(8, '-');
-        stringBuilder.insert(13, '-');
-        stringBuilder.insert(18, '-');
-        stringBuilder.insert(23, '-');
-
-        return stringBuilder.toString();
-    }
-
     public static String byteArrayToHexString(@NonNull byte[] bytes) {
         return byteArrayToHexStringBuilder(bytes).toString();
     }
@@ -61,17 +48,6 @@ public class Conversions {
         }
 
         return stringBuilder;
-    }
-
-    static int byteArrayToInteger(@NonNull @Size(min = 2, max = 2) byte[] byteArray) {
-        return (byteArray[0] & 0xff) * 0x100 + (byteArray[1] & 0xff);
-    }
-
-    static byte[] integerToByteArray(int value) {
-        return new byte[] {
-            (byte) (value / 256),
-            (byte) (value % 256)
-        };
     }
 
     public static List<Byte> asList(@NonNull byte[] bytes) {

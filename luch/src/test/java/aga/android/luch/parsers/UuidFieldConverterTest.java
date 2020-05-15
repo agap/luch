@@ -9,11 +9,12 @@ import java.util.UUID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 public class UuidFieldConverterTest {
 
-    private final UuidFieldConverter parser = new UuidFieldConverter();
+    private final UuidFieldConverter converter = new UuidFieldConverter();
 
     @Test(expected = Exception.class)
     public void testNotHavingEnoughDataToParseThrowsBeaconParseException() {
@@ -29,7 +30,7 @@ public class UuidFieldConverterTest {
         );
 
         // when
-        parser.consume(packet);
+        converter.consume(packet);
     }
 
     @Test
@@ -47,7 +48,7 @@ public class UuidFieldConverterTest {
         );
 
         // when
-        final UUID uuid = parser.consume(packet);
+        final UUID uuid = converter.consume(packet);
 
         // then
         assertEquals(
@@ -75,7 +76,7 @@ public class UuidFieldConverterTest {
         );
 
         // when
-        final UUID uuid = parser.consume(packet);
+        final UUID uuid = converter.consume(packet);
 
         // then
         assertEquals(
@@ -86,5 +87,55 @@ public class UuidFieldConverterTest {
             asList((byte) 0xFE, (byte) 0x12, (byte) 0x00),
             packet
         );
+    }
+
+    @Test
+    public void testInsert() {
+
+        // given
+        final List<Byte> packet = new ArrayList<>(singletonList((byte) 0xFF));
+
+        // when
+        converter.insert(packet, fromString("01234567-0123-4567-89AB-456789ABCDEF"));
+
+        // then
+        assertEquals(
+            asList(
+                (byte) 0xFF,
+                (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67,
+                (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67,
+                (byte) 0x89, (byte) 0xAB, (byte) 0x45, (byte) 0x67,
+                (byte) 0x89, (byte) 0xAB, (byte) 0xCD, (byte) 0xEF
+            ),
+            packet
+        );
+    }
+
+    @Test
+    public void testInsertMask() {
+
+        // given
+        final List<Byte> packet = new ArrayList<>(singletonList((byte) 0xFF));
+
+        // when
+        converter.insertMask(packet, (byte) 0x01);
+
+        // then
+        assertEquals(
+            asList(
+                (byte) 0xFF,
+                (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
+                (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01
+            ),
+            packet
+        );
+    }
+
+    @Test
+    public void testUuidObjectCanBeParsed() {
+
+        assertTrue(converter.canParse(UUID.class));
     }
 }

@@ -32,7 +32,7 @@ class UuidFieldConverter implements IFieldConverter<UUID> {
             .putLong(value.getMostSignificantBits())
             .putLong(value.getLeastSignificantBits());
 
-        for (int i = 0; i < packet.size(); i++) {
+        for (int i = 0; i < UUID_BYTE_SIZE; i++) {
             packet.add(bytes[i]);
         }
     }
