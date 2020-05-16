@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 
@@ -126,12 +127,18 @@ public class BeaconScanner implements IScanner {
 
         private IBeaconParser beaconParser = BeaconParserFactory.ALTBEACON_PARSER;
 
+        private final Context context;
+
         private ScanExecutorProvider scanTasksExecutorProvider = new ScanExecutorProvider() {
             @Override
             public ScheduledExecutorService provide() {
                 return newSingleThreadScheduledExecutor();
             }
         };
+
+        public Builder(@NonNull Context context) {
+            this.context = context;
+        }
 
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
@@ -183,8 +190,6 @@ public class BeaconScanner implements IScanner {
                         + "actual value is: " + beaconExpirationDurationSeconds + " seconds");
             }
 
-            final BeaconScanner scanner;
-
             if (bleDevice == null) {
                 final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -200,13 +205,14 @@ public class BeaconScanner implements IScanner {
                 }
 
                 bleDevice = new SystemBleDevice(
+                    context,
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
                     beaconParser.asScanFilters(definitions)
                 );
             }
 
-            scanner = new BeaconScanner(
+            final BeaconScanner scanner = new BeaconScanner(
                 bleDevice,
                 scanTasksExecutorProvider,
                 beaconParser,
