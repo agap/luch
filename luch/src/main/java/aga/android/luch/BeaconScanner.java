@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import aga.android.luch.parsers.BeaconParserFactory;
+import aga.android.luch.parsers.IBeaconParser;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,6 +49,9 @@ public class BeaconScanner implements IScanner {
     private ScheduledExecutorService scheduledExecutor;
 
     @NonNull
+    private final IBeaconParser beaconParser;
+
+    @NonNull
     private final Map<Beacon, Long> nearbyBeacons = new ConcurrentHashMap<>();
 
     @NonNull
@@ -56,8 +61,10 @@ public class BeaconScanner implements IScanner {
 
     private BeaconScanner(@NonNull IBleDevice bleDevice,
                           @NonNull ScanExecutorProvider scheduledExecutorProvider,
+                          @NonNull IBeaconParser beaconParser,
                           @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
+        this.beaconParser = beaconParser;
         this.scanDuration = scanDuration;
         this.uiHandler = new Handler();
         this.scheduledExecutorProvider = scheduledExecutorProvider;
@@ -118,6 +125,8 @@ public class BeaconScanner implements IScanner {
 
         private ScanDuration scanDuration = ScanDuration.UNIFORM;
 
+        private IBeaconParser beaconParser = BeaconParserFactory.ALTBEACON_PARSER;
+
         private final Context context;
 
         private ScanExecutorProvider scanTasksExecutorProvider = new ScanExecutorProvider() {
@@ -158,6 +167,11 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
+        public Builder setBeaconParser(@NonNull IBeaconParser beaconParser) {
+            this.beaconParser = beaconParser;
+            return this;
+        }
+
         @VisibleForTesting
         Builder setBleDevice(IBleDevice bleDevice) {
             this.bleDevice = bleDevice;
@@ -194,13 +208,14 @@ public class BeaconScanner implements IScanner {
                     context,
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
-                    RegionDefinitionMapper.asScanFilters(definitions)
+                    beaconParser.asScanFilters(definitions)
                 );
             }
 
             final BeaconScanner scanner = new BeaconScanner(
                 bleDevice,
                 scanTasksExecutorProvider,
+                beaconParser,
                 scanDuration
             );
 
@@ -291,7 +306,7 @@ public class BeaconScanner implements IScanner {
 
         @Override
         public void run() {
-            final Beacon beacon = RegionDefinitionMapper.asBeacon(scanResult);
+            final Beacon beacon = beaconParser.parse(scanResult);
 
             if (beacon == null) {
                 return;

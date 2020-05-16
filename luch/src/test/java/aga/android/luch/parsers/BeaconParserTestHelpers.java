@@ -1,4 +1,4 @@
-package aga.android.luch;
+package aga.android.luch.parsers;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanRecord;
@@ -13,27 +13,35 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 
-import static aga.android.luch.Conversions.integerToByteArray;
-import static aga.android.luch.Conversions.uuidStringToByteArray;
+import static aga.android.luch.parsers.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
 
 // Unfortunately, both BluetoothDevice and ScanResult's constructors are package-private,
 // so let's use some reflection magic to access them since we still need to test the
 // ScanResult -> Beacon mapping logic.
-class TestHelpers {
+public class BeaconParserTestHelpers {
 
-    static ScanResult createScanResult(@NonNull String bluetoothAddress,
-                                       @NonNull String proximityUuid,
-                                       int major,
-                                       int minor,
-                                       int rssi)
+    public static ScanResult createAltBeaconScanResult(@NonNull String bluetoothAddress,
+                                                       @NonNull byte[] beaconType,
+                                                       @NonNull String proximityUuid,
+                                                       int major,
+                                                       int minor,
+                                                       byte rssi,
+                                                       byte data)
             throws NoSuchMethodException,
             IllegalAccessException,
             InstantiationException,
             InvocationTargetException {
         final BluetoothDevice bluetoothDevice = getBluetoothDevice(bluetoothAddress);
 
-        final ScanRecord record = getScanRecord(proximityUuid, major, minor);
+        final ScanRecord record = getScanRecord(
+            beaconType,
+            proximityUuid,
+            major,
+            minor,
+            rssi,
+            data
+        );
 
         return new ScanResult(
             bluetoothDevice,
@@ -43,9 +51,12 @@ class TestHelpers {
         );
     }
 
-    private static ScanRecord getScanRecord(@NonNull String proximityUuid,
+    private static ScanRecord getScanRecord(@NonNull byte[] beaconType,
+                                            @NonNull String proximityUuid,
                                             int major,
-                                            int minor)
+                                            int minor,
+                                            byte rssi,
+                                            byte data)
             throws IllegalAccessException,
                 InstantiationException,
                 InvocationTargetException,
@@ -64,11 +75,12 @@ class TestHelpers {
         constructor.setAccessible(true);
 
         final SparseArray<byte[]> manufacturerData = new SparseArray<>();
-        final byte[] manufacturerByteArray = new byte[23];
+        final byte[] manufacturerByteArray = new byte[24];
 
-        manufacturerByteArray[0] = 0x02; // data type specification, 0x02 means it's iBeacon
-        manufacturerByteArray[1] = 0x15; // the length of remaining data, 21 bytes
-        manufacturerByteArray[22] = (byte) 0xB3; // iBeacon’s measured RSSI at a 1-meter distance
+        manufacturerByteArray[0] = beaconType[0];
+        manufacturerByteArray[1] = beaconType[1];
+        manufacturerByteArray[22] = rssi; // AltBeacon’s measured RSSI at a 1-meter distance
+        manufacturerByteArray[23] = data; // Optional data field
 
         arraycopy(
             uuidStringToByteArray(proximityUuid),
@@ -95,7 +107,7 @@ class TestHelpers {
         );
 
         manufacturerData.append(
-            76,
+            280,
             manufacturerByteArray
         );
 
@@ -123,5 +135,12 @@ class TestHelpers {
         constructor.setAccessible(true);
 
         return constructor.newInstance(bluetoothAddress);
+    }
+
+    private static byte[] integerToByteArray(int value) {
+        return new byte[] {
+            (byte) (value / 256),
+            (byte) (value % 256)
+        };
     }
 }

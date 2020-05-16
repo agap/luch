@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,8 +21,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import static aga.android.luch.TestHelpers.createScanResult;
-import static java.util.Collections.singleton;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
+import static java.util.Arrays.asList;
+import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
@@ -93,15 +95,18 @@ public class BeaconScannerTest {
 
         final String bluetoothAddress = "00:11:22:33:FF:EE";
         final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final int rssi = -95;
+        final byte rssi = -95;
         final int major = 15600;
         final int minor = 395;
-        final ScanResult scanResult = createScanResult(
+        final byte data = 0x01;
+        final ScanResult scanResult = createAltBeaconScanResult(
             bluetoothAddress,
+            new byte[] {(byte) 0xBE, (byte) 0xAC},
             proximityUuid,
             major,
             minor,
-            rssi
+            rssi,
+            data
         );
 
         // when
@@ -113,8 +118,11 @@ public class BeaconScannerTest {
 
         // then
         assertEquals(
-            singleton(
-                new Beacon(proximityUuid, bluetoothAddress, major, minor, rssi)
+            Collections.singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, rssi, data)
+                )
             ),
             beaconListener.nearbyBeacons
         );
