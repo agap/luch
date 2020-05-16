@@ -30,4 +30,9 @@ class IntegerFieldConverter implements IFieldConverter<Integer> {
     public boolean canParse(@NonNull Class clazz) {
         return Integer.class.isAssignableFrom(clazz);
     }
+
+    @Override
+    public boolean canParse(int numberOfBytes) {
+        return numberOfBytes == 2;
+    }
 }

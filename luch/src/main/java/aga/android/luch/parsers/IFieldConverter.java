@@ -32,6 +32,7 @@ interface IFieldConverter<T> {
      * Appends the mask bits (either 0 or 1) to the given mask packet. The amount of bytes to be
      * appended is defined by each {@link IFieldConverter}, but is has to match the size of the
      * sequence of bytes produced by the insert method out of the value of type T.
+     *
      * @param packet the mask packet to append the mask bits to
      * @param maskBit the mask bit value (either 0 or 1)
      */
@@ -39,9 +40,19 @@ interface IFieldConverter<T> {
 
     /**
      * Used to check if the parser will be able to parse the value of type clazz
+     *
      * @param clazz the type to check against
      * @return true if the parser can be used to parse the value having that type, false otherwise
      */
-    // todo add unit tests
     boolean canParse(@NonNull Class clazz);
+
+    /**
+     * Used to check if the parser will be able to parse the required number of bytes as the value
+     * of type T
+     *
+     * @param numberOfBytes numbers of bytes to check
+     * @return true if the parser can successfully parse the required number of bytes,
+     *         false otherwise
+     */
+    boolean canParse(int numberOfBytes);
 }

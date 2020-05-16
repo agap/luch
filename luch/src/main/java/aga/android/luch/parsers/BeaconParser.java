@@ -6,6 +6,7 @@ import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
@@ -16,42 +17,27 @@ import androidx.annotation.Nullable;
 
 import static aga.android.luch.Conversions.asByteArray;
 import static aga.android.luch.Conversions.byteArrayToHexString;
-import static java.util.Arrays.asList;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
-//todo cover with tests
-public final class BeaconParser implements IBeaconParser {
+final class BeaconParser implements IBeaconParser {
 
-    public static final BeaconParser ALTBEACON_PARSER = createFromLayout(
-        "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
-        // todo what's the real altbeacon's manufacturer id?
-        0xff
-    );
+    private final List<IFieldConverter> fieldConverters = new ArrayList<>();
 
-    private final IntegerFieldConverter beaconTypeParser = new IntegerFieldConverter();
+    private final Object beaconType;
 
-    private final List<IFieldConverter> fieldParsers = new ArrayList<>();
+    private final int beaconTypePosition;
 
     private final int manufacturerId;
 
-    private BeaconParser(@NonNull List<? extends IFieldConverter> fieldParsers,
-                         int manufacturerId) {
-        this.fieldParsers.addAll(fieldParsers);
+    BeaconParser(@NonNull List<? extends IFieldConverter> fieldConverters,
+                         int beaconTypePosition,
+                         int manufacturerId,
+                         Object beaconType) {
+        this.fieldConverters.addAll(fieldConverters);
+        this.beaconTypePosition = beaconTypePosition;
         this.manufacturerId = manufacturerId;
-    }
-
-    public static BeaconParser createFromLayout(@NonNull String beaconLayout,
-                                                int manufacturerId) {
-        // todo add actual parsing
-        return new BeaconParser(
-            asList(
-                new UuidFieldConverter(),
-                new IntegerFieldConverter(),
-                new IntegerFieldConverter(),
-                new SingleByteFieldConverter()
-            ),
-            manufacturerId
-        );
+        this.beaconType = beaconType;
     }
 
     @Override
@@ -73,15 +59,25 @@ public final class BeaconParser implements IBeaconParser {
             try {
                 final List identifiers = new ArrayList();
 
-                int beaconType = beaconTypeParser.consume(bytesList);
+                for (int j = 0; j < fieldConverters.size(); j++) {
+                    final IFieldConverter converter = fieldConverters.get(j);
 
-                //todo validate the beacon type
-
-                for (IFieldConverter parser : fieldParsers) {
+                    final Object parsedField = converter.consume(bytesList);
                     //noinspection unchecked
-                    identifiers.add(
-                        parser.consume(bytesList)
-                    );
+                    identifiers.add(parsedField);
+
+                    if (j == beaconTypePosition && beaconType != parsedField) {
+                        BeaconLogger.e(
+                            format(
+                                Locale.US,
+                                "Expected beacon type is %s, while the actual beacon type is %s;"
+                                        + " the data %s will be skipped",
+                                beaconType,
+                                parsedField,
+                                Conversions.byteArrayToHexString(rawBytes)
+                            )
+                        );
+                    }
                 }
 
                 return new Beacon(
@@ -158,10 +154,8 @@ public final class BeaconParser implements IBeaconParser {
 
         final List<Byte> data = new ArrayList<>();
 
-        beaconTypeParser.insertMask(data, ((byte) 0));
-
-        for (int i = 0; i < fieldParsers.size(); i++) {
-            final IFieldConverter parser = fieldParsers.get(i);
+        for (int i = 0; i < fieldConverters.size(); i++) {
+            final IFieldConverter parser = fieldConverters.get(i);
             final Object field = regionDefinition.getFieldAt(i);
 
             byteProducer.produce(data, field, i, parser);

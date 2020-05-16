@@ -1,0 +1,113 @@
+package aga.android.luch.parsers;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import aga.android.luch.Conversions;
+import androidx.annotation.NonNull;
+
+import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+
+public final class BeaconParserFactory {
+
+    public static final IBeaconParser ALTBEACON_PARSER = createFromLayout(
+        "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
+        // todo what's the real altbeacon's manufacturer id?
+        0xff
+    );
+
+    private static final List<String> SUPPORTED_PREFIXES = asList("m", "i", "p", "d");
+
+    private static final List<? extends IFieldConverter> SUPPORTED_CONVERTERS = asList(
+        new SingleByteFieldConverter(),
+        new IntegerFieldConverter(),
+        new UuidFieldConverter()
+    );
+
+    @SuppressWarnings("WeakerAccess")
+    public static IBeaconParser createFromLayout(@NonNull String beaconLayout,
+                                                 int manufacturerId) {
+
+        final List<IFieldConverter> converters = new ArrayList<>();
+
+        final String[] tokens = beaconLayout.split(",");
+
+        int beaconTypeFieldPosition = -1;
+
+        Object beaconType = null;
+
+        for (String token : tokens) {
+            final String fieldPrefix = getFieldPrefix(token);
+            final IFieldConverter converter = getSuitableConverter(token);
+
+            if (converter == null) {
+                throw new IllegalStateException(
+                    format(
+                        "Can't parse the field token %s, something is wrong with the field length",
+                        token
+                    )
+                );
+            } else {
+                converters.add(converter);
+            }
+
+            if (fieldPrefix.equals("m")) {
+                final String rawBeaconType = token.split("=")[1];
+
+                beaconType = converter.consume(
+                        Conversions.asList(Conversions.hexStringToByteArray(rawBeaconType))
+                );
+
+                beaconTypeFieldPosition = converters.size() - 1;
+            }
+        }
+
+        return new BeaconParser(converters, beaconTypeFieldPosition, manufacturerId, beaconType);
+    }
+
+    private static String getFieldPrefix(@NonNull String token) {
+        final String fieldPrefix = token.substring(0, 1);
+
+        if (!SUPPORTED_PREFIXES.contains(fieldPrefix)) {
+            throw new IllegalArgumentException(
+                format("Can't parse the field token %s, the prefix is not supported", token)
+            );
+        }
+
+        return fieldPrefix;
+    }
+
+    private static IFieldConverter getSuitableConverter(String token) {
+
+        final String[] fieldRange;
+        final int length;
+
+        try {
+            fieldRange = token.split(":")[1].split("=")[0].split("-");
+
+            final int startIndex = parseInt(fieldRange[0]);
+            final int endIndex   = parseInt(fieldRange[1]);
+            length     = endIndex - startIndex;
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                format(
+                    "Can't parse the field token %s, something is wrong with the field range",
+                    token
+                )
+            );
+        }
+
+        IFieldConverter suitableConverter = null;
+
+        for (IFieldConverter converter : SUPPORTED_CONVERTERS) {
+            if (converter.canParse(length)) {
+                suitableConverter = converter;
+                break;
+            }
+        }
+
+        return suitableConverter;
+    }
+}

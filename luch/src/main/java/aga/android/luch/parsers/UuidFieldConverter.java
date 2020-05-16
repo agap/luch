@@ -48,4 +48,9 @@ class UuidFieldConverter implements IFieldConverter<UUID> {
     public boolean canParse(@NonNull Class clazz) {
         return UUID.class.isAssignableFrom(clazz);
     }
+
+    @Override
+    public boolean canParse(int numberOfBytes) {
+        return numberOfBytes == UUID_BYTE_SIZE;
+    }
 }

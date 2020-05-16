@@ -20,15 +20,22 @@ public class Conversions {
 
     }
 
-    static byte[] uuidStringToByteArray(@NonNull String uuid) {
+    public static byte[] uuidStringToByteArray(@NonNull String uuid) {
         final String hex = uuid.replace("-", "");
 
-        final int length = hex.length();
+        return hexStringToByteArray(hex);
+    }
+
+    public static byte[] hexStringToByteArray(@NonNull String hexString) {
+        final int length = hexString.length();
 
         final byte[] result = new byte[length / 2];
 
         for (int i = 0; i < length; i += 2) {
-            result[i / 2] = (byte) ((digit(hex.charAt(i), 16) << 4) + digit(hex.charAt(i + 1), 16));
+            final int firstDigit = digit(hexString.charAt(i), 16) << 4;
+            final int secondDigit = digit(hexString.charAt(i + 1), 16);
+
+            result[i / 2] = (byte) (firstDigit + secondDigit);
         }
 
         return result;
