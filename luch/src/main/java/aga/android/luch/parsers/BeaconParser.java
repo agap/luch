@@ -66,7 +66,7 @@ final class BeaconParser implements IBeaconParser {
                     //noinspection unchecked
                     identifiers.add(parsedField);
 
-                    if (j == beaconTypePosition && beaconType != parsedField) {
+                    if (j == beaconTypePosition && !beaconType.equals(parsedField)) {
                         BeaconLogger.e(
                             format(
                                 Locale.US,

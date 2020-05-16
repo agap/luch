@@ -5,13 +5,13 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 
 import org.jmock.lib.concurrent.DeterministicScheduler;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,9 +19,10 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import static aga.android.luch.TestHelpers.createAltBeaconScanResult;
+import static java.util.Arrays.asList;
+import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
@@ -74,8 +75,6 @@ public class BeaconScannerTest {
     }
 
     @Test
-    @Ignore
-    // todo fixme
     public void testScannerRetransmitsBeaconsToIBeaconListener()
             throws InvocationTargetException,
                     NoSuchMethodException,
@@ -118,10 +117,12 @@ public class BeaconScannerTest {
 
         // then
         assertEquals(
-//            singleton(
-//                new Beacon(bluetoothAddress, rssi)
-//            ),
-            Collections.emptyList(),
+            Collections.singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, rssi, data)
+                )
+            ),
             beaconListener.nearbyBeacons
         );
     }
