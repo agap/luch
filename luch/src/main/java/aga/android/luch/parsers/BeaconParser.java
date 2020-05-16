@@ -77,6 +77,8 @@ final class BeaconParser implements IBeaconParser {
                                 Conversions.byteArrayToHexString(rawBytes)
                             )
                         );
+
+                        return null;
                     }
                 }
 

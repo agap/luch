@@ -22,6 +22,7 @@ import static java.lang.System.arraycopy;
 public class TestHelpers {
 
     public static ScanResult createAltBeaconScanResult(@NonNull String bluetoothAddress,
+                                                       @NonNull byte[] beaconType,
                                                        @NonNull String proximityUuid,
                                                        int major,
                                                        int minor,
@@ -33,7 +34,7 @@ public class TestHelpers {
             InvocationTargetException {
         final BluetoothDevice bluetoothDevice = getBluetoothDevice(bluetoothAddress);
 
-        final ScanRecord record = getScanRecord(proximityUuid, major, minor, rssi, data);
+        final ScanRecord record = getScanRecord(beaconType, proximityUuid, major, minor, rssi, data);
 
         return new ScanResult(
             bluetoothDevice,
@@ -43,7 +44,8 @@ public class TestHelpers {
         );
     }
 
-    private static ScanRecord getScanRecord(@NonNull String proximityUuid,
+    private static ScanRecord getScanRecord(@NonNull byte[] beaconType,
+                                            @NonNull String proximityUuid,
                                             int major,
                                             int minor,
                                             byte rssi,
@@ -68,8 +70,8 @@ public class TestHelpers {
         final SparseArray<byte[]> manufacturerData = new SparseArray<>();
         final byte[] manufacturerByteArray = new byte[24];
 
-        manufacturerByteArray[0] = (byte) 0xBE; // data type specification, 0x02 means it's iBeacon
-        manufacturerByteArray[1] = (byte) 0xAC; // the length of remaining data, 21 bytes
+        manufacturerByteArray[0] = beaconType[0];
+        manufacturerByteArray[1] = beaconType[1];
         manufacturerByteArray[22] = rssi; // AltBeacon’s measured RSSI at a 1-meter distance
         manufacturerByteArray[23] = data; // Optional data field
 

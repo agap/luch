@@ -101,6 +101,7 @@ public class BeaconScannerTest {
         final byte data = 0x01;
         final ScanResult scanResult = createAltBeaconScanResult(
             bluetoothAddress,
+            new byte[] {(byte) 0xBE, (byte) 0xAC},
             proximityUuid,
             major,
             minor,
