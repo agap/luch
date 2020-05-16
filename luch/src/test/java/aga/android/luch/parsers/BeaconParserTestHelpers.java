@@ -1,4 +1,4 @@
-package aga.android.luch;
+package aga.android.luch.parsers;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanRecord;
@@ -13,13 +13,13 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 
-import static aga.android.luch.Conversions.uuidStringToByteArray;
+import static aga.android.luch.parsers.Conversions.uuidStringToByteArray;
 import static java.lang.System.arraycopy;
 
 // Unfortunately, both BluetoothDevice and ScanResult's constructors are package-private,
 // so let's use some reflection magic to access them since we still need to test the
 // ScanResult -> Beacon mapping logic.
-public class TestHelpers {
+public class BeaconParserTestHelpers {
 
     public static ScanResult createAltBeaconScanResult(@NonNull String bluetoothAddress,
                                                        @NonNull byte[] beaconType,

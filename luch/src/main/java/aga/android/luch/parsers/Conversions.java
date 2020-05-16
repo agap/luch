@@ -1,4 +1,4 @@
-package aga.android.luch;
+package aga.android.luch.parsers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 import static java.lang.Character.digit;
 
-public class Conversions {
+class Conversions {
 
     private static final char[] HEX_ARRAY = {
         '0', '1', '2', '3',
@@ -20,13 +20,13 @@ public class Conversions {
 
     }
 
-    public static byte[] uuidStringToByteArray(@NonNull String uuid) {
+    static byte[] uuidStringToByteArray(@NonNull String uuid) {
         final String hex = uuid.replace("-", "");
 
         return hexStringToByteArray(hex);
     }
 
-    public static byte[] hexStringToByteArray(@NonNull String hexString) {
+    static byte[] hexStringToByteArray(@NonNull String hexString) {
         final int length = hexString.length();
 
         final byte[] result = new byte[length / 2];
@@ -41,11 +41,7 @@ public class Conversions {
         return result;
     }
 
-    public static String byteArrayToHexString(@NonNull byte[] bytes) {
-        return byteArrayToHexStringBuilder(bytes).toString();
-    }
-
-    private static StringBuilder byteArrayToHexStringBuilder(@NonNull byte[] bytes) {
+    static String byteArrayToHexString(@NonNull byte[] bytes) {
         final StringBuilder stringBuilder = new StringBuilder(bytes.length * 2 + 4);
 
         for (int j = 0; j < bytes.length; j++) {
@@ -54,10 +50,10 @@ public class Conversions {
             stringBuilder.insert(j * 2 + 1, HEX_ARRAY[v & 0x0F]);
         }
 
-        return stringBuilder;
+        return stringBuilder.toString();
     }
 
-    public static List<Byte> asList(@NonNull byte[] bytes) {
+    static List<Byte> asList(@NonNull byte[] bytes) {
         final List<Byte> list = new ArrayList<>();
 
         for (Byte singleByte : bytes) {
@@ -67,7 +63,7 @@ public class Conversions {
         return list;
     }
 
-    public static byte[] asByteArray(@NonNull List<Byte> bytes) {
+    static byte[] asByteArray(@NonNull List<Byte> bytes) {
         final byte[] array = new byte[bytes.size()];
 
         for (int i = 0; i < bytes.size(); i++) {

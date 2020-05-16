@@ -1,4 +1,4 @@
-package aga.android.luch;
+package aga.android.luch.parsers;
 
 import org.junit.Test;
 

@@ -10,13 +10,12 @@ import java.util.Locale;
 
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
-import aga.android.luch.Conversions;
 import aga.android.luch.RegionDefinition;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static aga.android.luch.Conversions.asByteArray;
-import static aga.android.luch.Conversions.byteArrayToHexString;
+import static aga.android.luch.parsers.Conversions.asByteArray;
+import static aga.android.luch.parsers.Conversions.byteArrayToHexString;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 

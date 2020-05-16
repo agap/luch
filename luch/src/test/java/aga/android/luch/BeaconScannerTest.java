@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static aga.android.luch.TestHelpers.createAltBeaconScanResult;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static java.util.Arrays.asList;
 import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;

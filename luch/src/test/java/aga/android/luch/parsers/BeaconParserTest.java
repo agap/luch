@@ -15,7 +15,7 @@ import java.util.List;
 import aga.android.luch.Beacon;
 import aga.android.luch.RegionDefinition;
 
-import static aga.android.luch.TestHelpers.createAltBeaconScanResult;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
