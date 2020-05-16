@@ -34,7 +34,14 @@ public class BeaconParserTestHelpers {
             InvocationTargetException {
         final BluetoothDevice bluetoothDevice = getBluetoothDevice(bluetoothAddress);
 
-        final ScanRecord record = getScanRecord(beaconType, proximityUuid, major, minor, rssi, data);
+        final ScanRecord record = getScanRecord(
+            beaconType,
+            proximityUuid,
+            major,
+            minor,
+            rssi,
+            data
+        );
 
         return new ScanResult(
             bluetoothDevice,

@@ -20,7 +20,7 @@ public class IntegerFieldConverterTest {
         // given
         final List<Byte> packet = new ArrayList<>(
             singletonList((byte) 0x01)
-        ) ;
+        );
 
         // when
         converter.consume(packet);
