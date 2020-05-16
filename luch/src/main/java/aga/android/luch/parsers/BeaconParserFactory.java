@@ -12,11 +12,7 @@ import static java.util.Arrays.asList;
 
 public final class BeaconParserFactory {
 
-    public static final IBeaconParser ALTBEACON_PARSER = createFromLayout(
-        "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
-        // todo what's the real altbeacon's manufacturer id?
-        0xff
-    );
+    private static final int ALTBEACON_MANUFACTURER_ID = 280;
 
     private static final List<String> SUPPORTED_PREFIXES = asList("m", "i", "p", "d");
 
@@ -24,6 +20,11 @@ public final class BeaconParserFactory {
         new SingleByteFieldConverter(),
         new IntegerFieldConverter(),
         new UuidFieldConverter()
+    );
+
+    public static final IBeaconParser ALTBEACON_PARSER = createFromLayout(
+        "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
+        ALTBEACON_MANUFACTURER_ID
     );
 
     @SuppressWarnings("WeakerAccess")
@@ -43,25 +44,34 @@ public final class BeaconParserFactory {
             final IFieldConverter converter = getSuitableConverter(token);
 
             if (converter == null) {
-                throw new IllegalStateException(
-                    format(
-                        "Can't parse the field token %s, something is wrong with the field length",
-                        token
-                    )
+                throw new IllegalArgumentException(
+                    format("Can't find the converter for token %s", token)
                 );
             } else {
                 converters.add(converter);
             }
 
             if (fieldPrefix.equals("m")) {
+                if (!token.contains("=")) {
+                    throw new IllegalArgumentException(
+                        format("Can't find the beacon's type value in token %s", token)
+                    );
+                }
+
                 final String rawBeaconType = token.split("=")[1];
 
                 beaconType = converter.consume(
-                        Conversions.asList(Conversions.hexStringToByteArray(rawBeaconType))
+                    Conversions.asList(Conversions.hexStringToByteArray(rawBeaconType))
                 );
 
                 beaconTypeFieldPosition = converters.size() - 1;
             }
+        }
+
+        if (beaconType == null || beaconTypeFieldPosition == -1) {
+            throw new IllegalArgumentException(
+                format("Could not find the beacon type field in the layout %s", beaconLayout)
+            );
         }
 
         return new BeaconParser(converters, beaconTypeFieldPosition, manufacturerId, beaconType);
@@ -88,8 +98,9 @@ public final class BeaconParserFactory {
             fieldRange = token.split(":")[1].split("=")[0].split("-");
 
             final int startIndex = parseInt(fieldRange[0]);
-            final int endIndex   = parseInt(fieldRange[1]);
-            length     = endIndex - startIndex;
+            final int endIndex = parseInt(fieldRange[1]);
+
+            length = endIndex - startIndex + 1;
         } catch (Exception e) {
             throw new IllegalStateException(
                 format(

@@ -19,11 +19,11 @@ class BeaconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         with(binding) {
             val resources = itemView.context.resources
 
-            beaconItemUuid.text  = beacon.getIdentifierAsUuid(0).toString()
-            beaconItemMajor.text = beacon.getIdentifierAsInt(1).toString()
-            beaconItemMinor.text = beacon.getIdentifierAsInt(2).toString()
+            beaconItemUuid.text  = beacon.getIdentifierAsUuid(1).toString()
+            beaconItemMajor.text = beacon.getIdentifierAsInt(2).toString()
+            beaconItemMinor.text = beacon.getIdentifierAsInt(3).toString()
             beaconItemRssi.text  = resources.getString(
-                R.string.beacon_rssi_value, beacon.getIdentifierAsByte(3)
+                R.string.beacon_rssi_value, beacon.getIdentifierAsByte(4)
             )
 
             beaconItemAddress.text = beacon.hardwareAddress
@@ -34,7 +34,7 @@ class BeaconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 class BeaconDiffCallback: DiffUtil.ItemCallback<Beacon>() {
 
     override fun areItemsTheSame(oldItem: Beacon, newItem: Beacon): Boolean {
-        return oldItem.uuid == newItem.uuid
+        return oldItem.getIdentifierAsUuid(1) == newItem.getIdentifierAsUuid(1)
     }
 
     override fun areContentsTheSame(oldItem: Beacon, newItem: Beacon): Boolean {
