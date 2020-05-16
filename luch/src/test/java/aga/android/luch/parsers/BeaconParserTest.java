@@ -1,5 +1,6 @@
 package aga.android.luch.parsers;
 
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 
 import org.junit.Test;
@@ -8,10 +9,15 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
 
 import aga.android.luch.Beacon;
+import aga.android.luch.RegionDefinition;
 
 import static aga.android.luch.TestHelpers.createAltBeaconScanResult;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -92,5 +98,104 @@ public class BeaconParserTest {
 
         // then
         assertNull(beacon);
+    }
+
+    @Test
+    public void testScanFilterMatchingAllBeacons() {
+
+        // when
+        final List<ScanFilter> scanFilters = parser.asScanFilters(
+            Collections.<RegionDefinition>emptyList()
+        );
+
+        // then
+        assertEquals(
+            singletonList(
+                new ScanFilter
+                    .Builder()
+                    .setManufacturerData(
+                        280,
+                        new byte[24],
+                        new byte[24]
+                    )
+                    .build()
+            ),
+            scanFilters
+        );
+    }
+
+    @Test
+    public void testScanFilterMatchingBeaconByUuidOnly() {
+
+        // given
+        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final RegionDefinition regionDefinition = new RegionDefinition(
+            asList(null, fromString(proximityUuid))
+        );
+
+        // when
+        final List<ScanFilter> scanFilters = parser.asScanFilters(
+            singletonList(regionDefinition)
+        );
+
+        // then
+        assertEquals(
+            singletonList(
+                new ScanFilter
+                    .Builder()
+                    .setManufacturerData(
+                        280,
+                        new byte[] {
+                            0x00, 0x00, (byte) 0xE5, 0x6E, 0x1F, 0x2C, (byte) 0xC7, 0x56,
+                            0x47, 0x6F, (byte) 0x83, 0x23, (byte) 0x8D, 0x1F, (byte) 0x9C,
+                            (byte) 0xD2, 0x45, (byte) 0xEA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                        },
+                        new byte[] {
+                            0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0
+                        }
+                    )
+                    .build()
+            ),
+            scanFilters
+        );
+    }
+
+    @Test
+    public void testScanFilterMatchingBeaconByUuidAndMajorAndMinor() {
+
+        // given
+        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final int major = 65535;
+        final int minor = 0;
+        final RegionDefinition regionDefinition = new RegionDefinition(
+            asList(null, fromString(proximityUuid), major, minor)
+        );
+
+        // when
+        final List<ScanFilter> scanFilters = parser.asScanFilters(
+            singletonList(regionDefinition)
+        );
+
+        // then
+        assertEquals(
+            singletonList(
+                new ScanFilter
+                    .Builder()
+                    .setManufacturerData(
+                        280,
+                        new byte[] {
+                            0x00, 0x00, (byte) 0xE5, 0x6E, 0x1F, 0x2C, (byte) 0xC7, 0x56,
+                            0x47, 0x6F, (byte) 0x83, 0x23, (byte) 0x8D, 0x1F, (byte) 0x9C,
+                            (byte) 0xD2, 0x45, (byte) 0xEA, (byte) 0xFF, (byte) 0xFF, 0x00,
+                            0x00, 0x00, 0x00
+                        },
+                        new byte[] {
+                            0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0
+                        }
+                    )
+                    .build()
+            ),
+            scanFilters
+        );
     }
 }
