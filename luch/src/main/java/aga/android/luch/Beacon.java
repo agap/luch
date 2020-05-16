@@ -7,7 +7,7 @@ import java.util.UUID;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class Beacon implements IBeacon {
+public class Beacon {
 
     @NonNull
     private final String hardwareAddress;
@@ -22,12 +22,10 @@ public class Beacon implements IBeacon {
     }
 
     @Nullable
-    @Override
     public UUID getIdentifierAsUuid(int index) {
         return ((UUID) beaconIdentifiers.get(index));
     }
 
-    @Override
     public int getIdentifierAsInt(int index) {
         return ((Integer) beaconIdentifiers.get(index));
     }
