@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import edu.emory.mathcs.backport.java.util.Collections;
 
-import static aga.android.luch.TestHelpers.createScanResult;
+import static aga.android.luch.TestHelpers.createAltBeaconScanResult;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
@@ -95,15 +95,17 @@ public class BeaconScannerTest {
 
         final String bluetoothAddress = "00:11:22:33:FF:EE";
         final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final int rssi = -95;
+        final byte rssi = -95;
         final int major = 15600;
         final int minor = 395;
-        final ScanResult scanResult = createScanResult(
+        final byte data = 0x01;
+        final ScanResult scanResult = createAltBeaconScanResult(
             bluetoothAddress,
             proximityUuid,
             major,
             minor,
-            rssi
+            rssi,
+            data
         );
 
         // when

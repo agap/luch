@@ -19,20 +19,21 @@ import static java.lang.System.arraycopy;
 // Unfortunately, both BluetoothDevice and ScanResult's constructors are package-private,
 // so let's use some reflection magic to access them since we still need to test the
 // ScanResult -> Beacon mapping logic.
-class TestHelpers {
+public class TestHelpers {
 
-    static ScanResult createScanResult(@NonNull String bluetoothAddress,
-                                       @NonNull String proximityUuid,
-                                       int major,
-                                       int minor,
-                                       int rssi)
+    public static ScanResult createAltBeaconScanResult(@NonNull String bluetoothAddress,
+                                                       @NonNull String proximityUuid,
+                                                       int major,
+                                                       int minor,
+                                                       byte rssi,
+                                                       byte data)
             throws NoSuchMethodException,
             IllegalAccessException,
             InstantiationException,
             InvocationTargetException {
         final BluetoothDevice bluetoothDevice = getBluetoothDevice(bluetoothAddress);
 
-        final ScanRecord record = getScanRecord(proximityUuid, major, minor);
+        final ScanRecord record = getScanRecord(proximityUuid, major, minor, rssi, data);
 
         return new ScanResult(
             bluetoothDevice,
@@ -44,7 +45,9 @@ class TestHelpers {
 
     private static ScanRecord getScanRecord(@NonNull String proximityUuid,
                                             int major,
-                                            int minor)
+                                            int minor,
+                                            byte rssi,
+                                            byte data)
             throws IllegalAccessException,
                 InstantiationException,
                 InvocationTargetException,
@@ -63,11 +66,12 @@ class TestHelpers {
         constructor.setAccessible(true);
 
         final SparseArray<byte[]> manufacturerData = new SparseArray<>();
-        final byte[] manufacturerByteArray = new byte[23];
+        final byte[] manufacturerByteArray = new byte[24];
 
-        manufacturerByteArray[0] = 0x02; // data type specification, 0x02 means it's iBeacon
-        manufacturerByteArray[1] = 0x15; // the length of remaining data, 21 bytes
-        manufacturerByteArray[22] = (byte) 0xB3; // iBeacon’s measured RSSI at a 1-meter distance
+        manufacturerByteArray[0] = (byte) 0xBE; // data type specification, 0x02 means it's iBeacon
+        manufacturerByteArray[1] = (byte) 0xAC; // the length of remaining data, 21 bytes
+        manufacturerByteArray[22] = rssi; // AltBeacon’s measured RSSI at a 1-meter distance
+        manufacturerByteArray[23] = data; // Optional data field
 
         arraycopy(
             uuidStringToByteArray(proximityUuid),
@@ -94,7 +98,7 @@ class TestHelpers {
         );
 
         manufacturerData.append(
-            76,
+            280,
             manufacturerByteArray
         );
 
@@ -126,8 +130,8 @@ class TestHelpers {
 
     private static byte[] integerToByteArray(int value) {
         return new byte[] {
-                (byte) (value / 256),
-                (byte) (value % 256)
+            (byte) (value / 256),
+            (byte) (value % 256)
         };
     }
 }
