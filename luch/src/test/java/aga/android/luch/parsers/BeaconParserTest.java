@@ -11,12 +11,12 @@ import org.robolectric.annotation.Config;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import aga.android.luch.Beacon;
 import aga.android.luch.RegionDefinition;
 
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
@@ -128,10 +128,13 @@ public class BeaconParserTest {
     public void testScanFilterMatchingBeaconByUuidOnly() {
 
         // given
-        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final RegionDefinition regionDefinition = new RegionDefinition(
-            asList(null, fromString(proximityUuid))
-        );
+        final UUID proximityUuid = fromString("E56E1F2C-C756-476F-8323-8D1F9CD245EA");
+
+        final RegionDefinition regionDefinition = new RegionDefinition
+            .Builder()
+            .addNullField()
+            .addUuidField(proximityUuid)
+            .build();
 
         // when
         final List<ScanFilter> scanFilters = parser.asScanFilters(
@@ -164,12 +167,18 @@ public class BeaconParserTest {
     public void testScanFilterMatchingBeaconByUuidAndMajorAndMinor() {
 
         // given
-        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final UUID proximityUuid = fromString("E56E1F2C-C756-476F-8323-8D1F9CD245EA");
+
         final int major = 65535;
         final int minor = 0;
-        final RegionDefinition regionDefinition = new RegionDefinition(
-            asList(null, fromString(proximityUuid), major, minor)
-        );
+
+        final RegionDefinition regionDefinition = new RegionDefinition
+            .Builder()
+            .addNullField()
+            .addUuidField(proximityUuid)
+            .addIntegerField(major)
+            .addIntegerField(minor)
+            .build();
 
         // when
         final List<ScanFilter> scanFilters = parser.asScanFilters(
