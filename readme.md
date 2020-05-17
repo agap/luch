@@ -2,13 +2,13 @@
 
 # Luch
 
-A somewhat simplistic library that aims to do one thing only - monitor nearby iBeacons when the app's in the foreground mode. The library is under development, check the demo (`sample` module) to see the example.  
+A somewhat simplistic library built with only one purpose in mind - monitor nearby beacons when the app's in the foreground mode. The library is under development, check the demo (`sample` module) to see the example.  
 
 Also, in case you're wondering - luch ("луч") means "beam" in Russian.
 
 # Basic Usage
 
-## Obtain an instance of the `BeaconScanner`
+## Obtain an instance of the BeaconScanner
 
 ```kotlin
 val beaconScanner = BeaconScanner.Builder()
@@ -32,31 +32,60 @@ beaconScanner.stop()
 
 That's it!
 
-## Miscellaneous
+## Settings
 
-To see the beacon logs in the logcat, just replace the default implementation of the Logger with a system instance:
+### Logs
+
+To see the beacon logs in the logcat, replace the default implementation of the Logger with a system instance:
 
 ```kotlin
 BeaconLogger.setInstance(BeaconLogger.SYSTEM_INSTANCE)
 ```
 
-Don't forget to check that the app holds location permission, location services are on and Bluetooth is enabled. The library will warn you by issuing a warning log statement, but it will not show any popups or anything of that sort.
+Don't forget to check that the app holds location permission, location services are on, and Bluetooth is enabled. The library will warn you by issuing a warning log statement, but it will not show any popups or anything of that sort.
+
+### Supported beacons
+
+By default, the library supports AltBeacon monitoring, but you can also set your own layout by writing something like that:
+
+```kotlin
+val beaconManufacturerId = 100 // you need to find the manufacturer id of your beacons, that's just an example
+val beaconLayout = "<beacon-layout>" // search the Internet to find the layout string of your specific beacon
+
+val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout, beaconManufacturerId)
+
+val beaconScanner = BeaconScanner.Builder()
+    .setBeaconParser(beaconParser)
+    .setBeaconListener { beacons: Set<Beacon> ->
+        // do something with your beacons here
+    }
+    .build()
+```
+
+The format of beacon layouts is somewhat similar to the one supported by [AltBeacon](https://altbeacon.github.io/android-beacon-library/javadoc/reference/org/altbeacon/beacon/BeaconParser.html) (see `setBeaconLayout` method) with the number of exceptions:
+1. The only field prefixes supported at the moment are 'm', 'i', 'p' and 'd'.
+2. Little-endian fields are not supported yet, as variable-length fields.
 
 # FAQ
 
-(Well, to be honest, no one has asked me these questions but I decided to call it a section of Frequently Asked Questions nonetheless)
+(Well, to be honest, no one has asked me these questions, but I decided to call it a section of Frequently Asked Questions nonetheless)
 
-## What if I need Eddystone or other beacon formats?
+## What if I need Eddystone beacons?
 
-There is nothing except for iBeacon now; if you need other formats then please check out [altbeacon](https://altbeacon.github.io/android-beacon-library/).
+The current BeaconParser is only capable of handling the AltBeacon beacons and certain proprietary beacon layouts. I might add Eddystone support in the future, but it might take quite some time.
 
 ## Background mode?
 
-Sorry, my experience tells me that unless Google adds native support of iBeacons in OS, all solutions we come up with will be half-baked, especially considering the recent changes related to background location access.
+The way I see it, Google is constantly making sure we can do less and less in background mode (which is a good thing IMO, considering how many bad actors there're):
+
+* Android 8 introduced background [location](https://developer.android.com/about/versions/oreo/background-location-limits) & [execution](https://developer.android.com/about/versions/oreo/background) limits.
+* Android 10 introduced a "while in use" only location permission.
+* In Android 11, there will be [no background location](https://developer.android.com/preview/privacy/location) permission option in the in-app permissions dialog.
+
+So there will be no background mode support unless I decide it's possible to do something which would work reliably despite all these recent changes.
 
 ## What's the point of this library then?
 
 1. I want something simple, without background mode, beacon caching, ranging, and all that stuff. The more code we put into production, the less stable the result becomes.
-2. I need the APIs to look a bit different compared to altbeacon. First, I want to be notified periodically about all beacons which are nearby, not the individual enter/exit events (having the individual enter/exit events means that we need to support the overall view of nearby beacons ourselves and I want to hide it). Second, I want to be able to scan for nearby beacons while filtering by proximity UUIDs only, and I expect to see the beacons' major/minor values in the responses. `altbeacon` hides the major/minor from the monitoring results unless you specified UUID **and** major **and** minor (I know they did it for compatibility with iOS, but still, I don't like that behavior).
-3. I'm a bit afraid of updating the `altbeacon` library in the projects where I use it since I had a somewhat painful experience with it - sometimes I catch the performance regressions during the acceptance tests, sometimes I catch crashes during the staged rollout. Both happened a bit too often, so I _hope_ that this library might turn out to be more stable by being less complex (famous last words).
-4. Just have some fun. :)
+2. I need the APIs to look a bit different compared to altbeacon, all I want is to be notified periodically about which beacons are near me, without individual beacon enter/exit events.
+3. Just have some fun. :)
