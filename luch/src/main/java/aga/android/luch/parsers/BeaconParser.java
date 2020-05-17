@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 import static aga.android.luch.parsers.Conversions.asByteArray;
 import static aga.android.luch.parsers.Conversions.byteArrayToHexString;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 
 final class BeaconParser implements IBeaconParser {
 
@@ -107,7 +106,7 @@ final class BeaconParser implements IBeaconParser {
         try {
             if (regionDefinitions.isEmpty()) {
                 scanFilters.add(
-                    getScanFilter(new RegionDefinition(emptyList()))
+                    getScanFilter(new RegionDefinition.Builder().build())
                 );
             } else {
                 for (RegionDefinition regionDefinition : regionDefinitions) {
