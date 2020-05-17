@@ -147,8 +147,8 @@ public class BeaconScanner implements IScanner {
 
         /**
          * Sets the list of {@link RegionDefinition}s to look for. The empty list means we're
-         * interested in all iBeacons around us, no matter what proximity uuid/major/minor do
-         * they have.
+         * interested in all beacons matching the current beacon layout around us, no matter what
+         * data do they have.
          *
          * Default value: empty list.
          */
