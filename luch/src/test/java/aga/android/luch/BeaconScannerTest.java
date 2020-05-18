@@ -50,6 +50,13 @@ public class BeaconScannerTest {
     }
 
     @Test
+    public void testBeaconScannerCanBeBuiltWithDefaultParameters() {
+        new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .build();
+    }
+
+    @Test
     public void testScannerStartsAndStopsScansViaBleDevice() {
         // given
         final CountingFakeBleDevice bleDevice = new CountingFakeBleDevice();
