@@ -32,9 +32,9 @@ beaconScanner.stop()
 
 That's it!
 
-## Settings
+# Settings
 
-### Logs
+## Logs
 
 To see the beacon logs in the logcat, replace the default implementation of the Logger with a system instance:
 
@@ -44,7 +44,7 @@ BeaconLogger.setInstance(BeaconLogger.SYSTEM_INSTANCE)
 
 Don't forget to check that the app holds location permission, location services are on, and Bluetooth is enabled. The library will warn you by issuing a warning log statement, but it will not show any popups or anything of that sort.
 
-### Supported beacons
+## Supported beacons
 
 By default, the library supports AltBeacon monitoring, but you can also set your own layout by writing something like that:
 
