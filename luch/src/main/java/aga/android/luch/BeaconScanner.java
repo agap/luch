@@ -117,7 +117,7 @@ public class BeaconScanner implements IScanner {
 
         private IBeaconListener listener = null;
 
-        private List<RegionDefinition> definitions = Collections.emptyList();
+        private List<Region> regions = Collections.emptyList();
 
         private long beaconExpirationDurationSeconds = 5;
 
@@ -150,14 +150,14 @@ public class BeaconScanner implements IScanner {
         }
 
         /**
-         * Sets the list of {@link RegionDefinition}s to look for. The empty list means we're
+         * Sets the list of {@link Region}s to look for. The empty list means we're
          * interested in all beacons matching the current beacon layout around us, no matter what
          * data do they have.
          *
          * Default value: empty list.
          */
-        public Builder setRegionDefinitions(List<RegionDefinition> definitions) {
-            this.definitions = definitions;
+        public Builder setRegions(List<Region> regions) {
+            this.regions = regions;
             return this;
         }
 
@@ -232,7 +232,7 @@ public class BeaconScanner implements IScanner {
                     context,
                     bluetoothAdapter,
                     scanSettingsBuilder.build(),
-                    beaconParser.asScanFilters(definitions)
+                    beaconParser.asScanFilters(regions)
                 );
             }
 
