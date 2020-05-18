@@ -42,59 +42,74 @@ class SystemBleDevice implements IBleDevice {
             return;
         }
 
-        // On Android 5.0 the behaviour of BluetoothAdapter/BluetoothLeScanner is different
-        // from subsequent releases - BluetoothAdapter.getBluetoothLeScanner() returns non-nullable
-        // reference even if Bluetooth is disabled, but an attempt to call startScan/stopScan on it
-        // raises an exception. On later versions, getBluetoothLeScanner() just returns null if
-        // Bluetooth is disabled.
-        if (!bluetoothAdapter.isEnabled()) {
+        try {
+            // On Android 5.0 the behaviour of BluetoothAdapter/BluetoothLeScanner is different
+            // from subsequent releases - BluetoothAdapter.getBluetoothLeScanner() returns
+            // non-nullable reference even if Bluetooth is disabled, but an attempt to call
+            // startScan/stopScan on it raises an exception. On later versions,
+            // getBluetoothLeScanner() just returns null if Bluetooth is disabled.
+            if (!bluetoothAdapter.isEnabled()) {
+                BeaconLogger.e(
+                    "BluetoothAdapter is not enabled, scans will not be started (check if "
+                        + "Bluetooth is turned on)"
+                );
+                return;
+            }
+
+            final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+            if (bleScanner == null) {
+                BeaconLogger.e(
+                    "BluetoothLeScanner is missing, scans will not be started "
+                        + "(check if Bluetooth is turned on)"
+                );
+
+                return;
+            }
+
+            bleScanner
+                .startScan(
+                    scanFilters,
+                    scanSettings,
+                    scanCallback
+                );
+        } catch (SecurityException e) {
             BeaconLogger.e(
-                "BluetoothAdapter is not enabled, scans will not be started (check if Bluetooth "
-                    + "is turned on)"
+                "Can't start the BLE scans since it results in SecurityException (check if the "
+                    + "is running in the Samsung's Knox container or something similar)"
             );
-            return;
         }
-
-        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        if (bleScanner == null) {
-            BeaconLogger.e(
-                "BluetoothLeScanner is missing, scans will not be started "
-                    + "(check if Bluetooth is turned on)"
-            );
-
-            return;
-        }
-
-        bleScanner
-            .startScan(
-                scanFilters,
-                scanSettings,
-                scanCallback
-            );
     }
 
     @Override
     public void stopScans(@NonNull ScanCallback scanCallback) {
-        if (!bluetoothAdapter.isEnabled()) {
+        try {
+            if (!bluetoothAdapter.isEnabled()) {
+                BeaconLogger.e(
+                    "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely "
+                        + "the scans weren't started either (check if Bluetooth is turned on)"
+                );
+                return;
+            }
+
+            final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+            if (bleScanner == null) {
+                BeaconLogger.e(
+                    "Can't stop the BLE scans since there is no BluetoothLeScanner available, "
+                        + "most likely the scans weren't started either (check if Bluetooth is "
+                        + "turned on)"
+                );
+
+                return;
+            }
+
+            bleScanner.stopScan(scanCallback);
+        } catch (SecurityException e) {
             BeaconLogger.e(
-                "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely "
-                    + "the scans weren't started either (check if Bluetooth is turned on)"
+                "Can't stop the BLE scans since it results in SecurityException (check if the "
+                        + "is running in the Samsung's Knox container or something similar)"
             );
-            return;
         }
-
-        final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        if (bleScanner == null) {
-            BeaconLogger.e(
-                "Can't stop the BLE scans since there is no BluetoothLeScanner available, most "
-                    + "likely the scans weren't started either (check if Bluetooth is turned on)"
-            );
-
-            return;
-        }
-
-        bleScanner.stopScan(scanCallback);
     }
 }
