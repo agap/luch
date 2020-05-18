@@ -152,4 +152,32 @@ public class SystemBleDeviceTest {
         // then
         verifyZeroInteractions(scanner);
     }
+
+    @Test
+    public void testScannerStartMethodIsNotCrashingTheAppIfItIsRunningInKnoxContainer() {
+        // given
+        when(adapter.isEnabled()).thenThrow(SecurityException.class);
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
+
+        // when
+        device.startScans(scanCallback);
+
+        // then
+        verify(adapter).isEnabled();
+        verifyNoMoreInteractions(adapter);
+    }
+
+    @Test
+    public void testScannerStopMethodIsNotCrashingTheAppIfItIsRunningInKnoxContainer() {
+        // given
+        when(adapter.isEnabled()).thenThrow(SecurityException.class);
+        shadowOf(packageManager).setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
+
+        // when
+        device.stopScans(scanCallback);
+
+        // then
+        verify(adapter).isEnabled();
+        verifyNoMoreInteractions(adapter);
+    }
 }
