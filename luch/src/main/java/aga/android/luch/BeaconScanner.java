@@ -140,6 +140,10 @@ public class BeaconScanner implements IScanner {
             this.context = context;
         }
 
+        /**
+         * Sets the {@link IBeaconListener} implementation which will be notified every time the
+         * change in the nearby beacons occurs.
+         */
         public Builder setBeaconListener(IBeaconListener listener) {
             this.listener = listener;
             return this;
@@ -157,16 +161,36 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
+        /**
+         * Sets how long does it take for a beacon to be considered expired after its last
+         * detection.
+         *
+         * Default value: 5 seconds
+         */
         public Builder setBeaconExpirationDuration(@IntRange(from = 1) long seconds) {
             this.beaconExpirationDurationSeconds = seconds;
             return this;
         }
 
+        /**
+         * Sets the {@link ScanDuration} object which determines two things:
+         * 1. How long do we scan for beacons
+         * 2. How long do we wait between to subsequent scans
+         *
+         * Default value: 6 seconds for both scan and rest durations.
+         */
         public Builder setScanDuration(@NonNull ScanDuration scanDuration) {
             this.scanDuration = scanDuration;
             return this;
         }
 
+        /**
+         * Changes the {@link IBeaconParser} implementation used by the system to parse
+         * the detected beacons.
+         *
+         *  By default the library parses the detected beacons in accordance with the AltBeacon
+         *  specification.
+         */
         public Builder setBeaconParser(@NonNull IBeaconParser beaconParser) {
             this.beaconParser = beaconParser;
             return this;
