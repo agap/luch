@@ -8,11 +8,11 @@ import androidx.annotation.NonNull;
 
 import static java.lang.String.format;
 
-public class RegionDefinition {
+public class Region {
 
     private List regionFields = new ArrayList();
 
-    private RegionDefinition(@NonNull List regionFields) {
+    private Region(@NonNull List regionFields) {
         //noinspection unchecked
         this.regionFields.addAll(regionFields);
     }
@@ -66,8 +66,8 @@ public class RegionDefinition {
             return this;
         }
 
-        public RegionDefinition build() {
-            return new RegionDefinition(regionFields);
+        public Region build() {
+            return new Region(regionFields);
         }
     }
 }

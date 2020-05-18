@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import aga.android.luch.Beacon;
-import aga.android.luch.RegionDefinition;
+import aga.android.luch.Region;
 
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static java.util.Collections.singletonList;
@@ -105,7 +105,7 @@ public class BeaconParserTest {
 
         // when
         final List<ScanFilter> scanFilters = parser.asScanFilters(
-            Collections.<RegionDefinition>emptyList()
+            Collections.<Region>emptyList()
         );
 
         // then
@@ -130,7 +130,7 @@ public class BeaconParserTest {
         // given
         final UUID proximityUuid = fromString("E56E1F2C-C756-476F-8323-8D1F9CD245EA");
 
-        final RegionDefinition regionDefinition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addNullField()
             .addUuidField(proximityUuid)
@@ -138,7 +138,7 @@ public class BeaconParserTest {
 
         // when
         final List<ScanFilter> scanFilters = parser.asScanFilters(
-            singletonList(regionDefinition)
+            singletonList(region)
         );
 
         // then
@@ -172,7 +172,7 @@ public class BeaconParserTest {
         final int major = 65535;
         final int minor = 0;
 
-        final RegionDefinition regionDefinition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addNullField()
             .addUuidField(proximityUuid)
@@ -182,7 +182,7 @@ public class BeaconParserTest {
 
         // when
         final List<ScanFilter> scanFilters = parser.asScanFilters(
-            singletonList(regionDefinition)
+            singletonList(region)
         );
 
         // then

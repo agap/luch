@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
-import aga.android.luch.RegionDefinition;
+import aga.android.luch.Region;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -99,24 +99,24 @@ final class BeaconParser implements IBeaconParser {
 
     @NonNull
     @Override
-    public List<ScanFilter> asScanFilters(@NonNull List<RegionDefinition> regionDefinitions) {
+    public List<ScanFilter> asScanFilters(@NonNull List<Region> regions) {
 
         final List<ScanFilter> scanFilters = new ArrayList<>();
 
         try {
-            if (regionDefinitions.isEmpty()) {
+            if (regions.isEmpty()) {
                 scanFilters.add(
-                    getScanFilter(new RegionDefinition.Builder().build())
+                    getScanFilter(new Region.Builder().build())
                 );
             } else {
-                for (RegionDefinition regionDefinition : regionDefinitions) {
-                    scanFilters.add(getScanFilter(regionDefinition));
+                for (Region region : regions) {
+                    scanFilters.add(getScanFilter(region));
                 }
             }
         } catch (Exception e) {
             BeaconLogger.e(
-                "Could not create scan filters based on the beacon layout and provided region "
-                    + "definitions; the scan filters to be used are: " + scanFilters.toString()
+                "Could not create scan filters based on the beacon layout and provided regions; "
+                    + "the scan filters to be used are: " + scanFilters.toString()
             );
         }
 
@@ -124,11 +124,11 @@ final class BeaconParser implements IBeaconParser {
     }
 
     @NonNull
-    private ScanFilter getScanFilter(@NonNull RegionDefinition regionDefinition)
-            throws RegionDefinitionConversionException {
+    private ScanFilter getScanFilter(@NonNull Region region)
+            throws RegionConversionException {
 
-        final List<Byte> mask = getMask(regionDefinition, MASK_PRODUCER);
-        final List<Byte> filter = getMask(regionDefinition, FILTER_PRODUCER);
+        final List<Byte> mask = getMask(region, MASK_PRODUCER);
+        final List<Byte> filter = getMask(region, FILTER_PRODUCER);
 
         return new ScanFilter
             .Builder()
@@ -143,20 +143,21 @@ final class BeaconParser implements IBeaconParser {
     /**
      * Creates a beacon advertisement mask to be used in {@link android.bluetooth.le.ScanFilter}
      * based on the {@link IFieldConverter} it contains
-     * @param regionDefinition the definition of the region to scan for; the existence or absence
-     *                         of certain fields in the definition will affect the mask
+     *
+     * @param region the region to search for; the existence or absence of certain fields in
+     *               the region will affect the mask
      * @return byte mask
      */
     @NonNull
-    private List<Byte> getMask(@NonNull RegionDefinition regionDefinition,
+    private List<Byte> getMask(@NonNull Region region,
                                @NonNull ByteProducer byteProducer)
-            throws RegionDefinitionConversionException {
+            throws RegionConversionException {
 
         final List<Byte> data = new ArrayList<>();
 
         for (int i = 0; i < fieldConverters.size(); i++) {
             final IFieldConverter parser = fieldConverters.get(i);
-            final Object field = regionDefinition.getFieldAt(i);
+            final Object field = region.getFieldAt(i);
 
             byteProducer.produce(data, field, i, parser);
         }
@@ -169,7 +170,7 @@ final class BeaconParser implements IBeaconParser {
         void produce(List<Byte> packet,
                      Object field,
                      int position,
-                     IFieldConverter parser) throws RegionDefinitionConversionException;
+                     IFieldConverter parser) throws RegionConversionException;
     }
 
     private static final ByteProducer FILTER_PRODUCER = new ByteProducer() {
@@ -177,7 +178,7 @@ final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldConverter parser) throws RegionDefinitionConversionException {
+                            IFieldConverter parser) throws RegionConversionException {
 
             if (field == null) {
                 parser.insertMask(packet, (byte) 0x00);
@@ -185,11 +186,10 @@ final class BeaconParser implements IBeaconParser {
                 //noinspection unchecked
                 parser.insert(packet, field);
             } else {
-                throw new RegionDefinitionConversionException(
+                throw new RegionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
-                        + IFieldConverter.class + ", while the RegionDefinition object has "
-                        + "an incompatible field (" + field
-                        + ") in the same position. Check the beacon layout."
+                        + IFieldConverter.class + ", while the Region object has an incompatible "
+                        + "field (" + field + ") in the same position. Check the beacon layout."
                 );
             }
         }
@@ -200,7 +200,7 @@ final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldConverter parser) throws RegionDefinitionConversionException {
+                            IFieldConverter parser) throws RegionConversionException {
 
             final byte maskByte;
 
@@ -209,11 +209,10 @@ final class BeaconParser implements IBeaconParser {
             } else if (parser.canParse(field.getClass())) {
                 maskByte = 0x01;
             } else {
-                throw new RegionDefinitionConversionException(
+                throw new RegionConversionException(
                     "Type mismatch, field parser in position " + position + " has type of "
-                            + IFieldConverter.class + ", while the RegionDefinition object has "
-                            + "an incompatible field (" + field
-                            + ") in the same position. Check the beacon layout."
+                        + IFieldConverter.class + ", while the Region object has an incompatible "
+                        + "field (" + field + ") in the same position. Check the beacon layout."
                 );
             }
 

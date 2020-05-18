@@ -6,12 +6,12 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
-public class RegionDefinitionTest {
+public class RegionTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testNegativeIntegerFieldIsRejected() {
 
-        final RegionDefinition definition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addIntegerField(-1)
             .build();
@@ -20,7 +20,7 @@ public class RegionDefinitionTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIntegerGreaterThan65535FieldIsRejected() {
 
-        final RegionDefinition definition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addIntegerField(65536)
             .build();
@@ -30,13 +30,13 @@ public class RegionDefinitionTest {
     public void testIntegerFieldWithinAcceptedRangeIsNotRejected() {
 
         // when
-        final RegionDefinition definition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addIntegerField(28536)
             .build();
 
         // then
-        assertEquals(28536, definition.getFieldAt(0));
+        assertEquals(28536, region.getFieldAt(0));
     }
 
     @Test
@@ -46,7 +46,7 @@ public class RegionDefinitionTest {
         final UUID uuid = UUID.fromString("01234567-0123-4567-89AB-456789ABCDEF");
 
         // when
-        final RegionDefinition definition = new RegionDefinition
+        final Region region = new Region
             .Builder()
             .addIntegerField(28536)
             .addUuidField(uuid)
@@ -56,10 +56,10 @@ public class RegionDefinitionTest {
             .build();
 
         // then
-        assertEquals(28536, definition.getFieldAt(0));
-        assertEquals(uuid, definition.getFieldAt(1));
-        assertEquals(100, definition.getFieldAt(2));
-        assertEquals(65530, definition.getFieldAt(3));
-        assertEquals((byte) 0xBE, definition.getFieldAt(4));
+        assertEquals(28536, region.getFieldAt(0));
+        assertEquals(uuid, region.getFieldAt(1));
+        assertEquals(100, region.getFieldAt(2));
+        assertEquals(65530, region.getFieldAt(3));
+        assertEquals((byte) 0xBE, region.getFieldAt(4));
     }
 }
