@@ -156,7 +156,7 @@ public class BeaconScanner implements IScanner {
          *
          * Default value: empty list.
          */
-        public Builder setRegions(List<Region> regions) {
+        public Builder setRegions(@NonNull List<Region> regions) {
             this.regions = regions;
             return this;
         }
