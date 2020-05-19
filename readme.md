@@ -36,7 +36,7 @@ That's it!
 
 ## Regions
 
-If you want to monitor specific beacons, you can provide a list of `Region's to look for when you're creating a BeaconScanner:
+If you want to monitor specific beacons, you can provide a list of regions to look for when you're creating a BeaconScanner:
 
 ```kotlin
 val regions = listOf(Region.Builder().build())
@@ -74,7 +74,7 @@ The first field is a beacon type field that occupies the 2nd and 3rd bytes and h
 
 ## Beacons
 
-The `Beacon`s work in more or less similar fashion to the `Region`s - once you get a `Beacon` object, you can inspect its data by calling getter methods:
+You can access the `Beacon`'s fields in more or less similar fashion as the `Region`'s fields - once you get a `Beacon` object, you can inspect its data by calling getter methods:
 
 ```kotlin
 val uuid  = beacon.getIdentifierAsUuid(1)
