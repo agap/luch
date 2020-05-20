@@ -17,7 +17,7 @@ task checkstyle(type: Checkstyle) {
 check.dependsOn 'checkstyle'
 
 jacoco {
-    toolVersion = "0.8.4"
+    toolVersion = "0.8.5"
 }
 
 tasks.withType(Test) {
@@ -26,7 +26,7 @@ tasks.withType(Test) {
 
 def jacocoFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
 
-task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'jacocoTestReport') {
+task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'jacocoTestDebugUnitTestReport') {
     sourceDirectories.setFrom(files(["$project.projectDir/src/main/java"]))
     classDirectories.setFrom(files([fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: jacocoFilter)]))
     executionData.setFrom(files("${buildDir}/jacoco/testDebugUnitTest.exec"))
@@ -34,7 +34,7 @@ task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn:
     violationRules {
         failOnViolation = true
         rule {
-            element = 'PACKAGE'
+            element = 'BUNDLE'
 
             limit {
                 value = 'COVEREDRATIO'
