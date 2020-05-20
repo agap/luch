@@ -11,8 +11,7 @@ public class BeaconParserFactoryTest {
 
         // given
         final IBeaconParser parser = createFromLayout(
-            "i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
-            280
+            "i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"
         );
     }
 
@@ -21,8 +20,7 @@ public class BeaconParserFactoryTest {
 
         // given
         final IBeaconParser parser = createFromLayout(
-            "m:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
-            280
+            "m:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"
         );
     }
 
@@ -31,8 +29,7 @@ public class BeaconParserFactoryTest {
 
         // given
         final IBeaconParser parser = createFromLayout(
-            "a:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
-            280
+            "a:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"
         );
     }
 
@@ -41,8 +38,7 @@ public class BeaconParserFactoryTest {
 
         // given the last 'd' field has a length of 6
         final IBeaconParser parser = createFromLayout(
-            "m:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-30",
-            280
+            "m:2-3,i:4-19,i:20-21,i:22-23,p:24-24,d:25-30"
         );
     }
 }
