@@ -90,10 +90,9 @@ If you don't want to work with integer indices, you can create your own `Beacon`
 By default, the library supports AltBeacon monitoring, but you can also set your own layout by writing something like that:
 
 ```kotlin
-val beaconManufacturerId = 100 // you need to find the manufacturer id of your beacons, that's just an example
 val beaconLayout = "<beacon-layout>" // search the Internet to find the layout string of your specific beacon
 
-val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout, beaconManufacturerId)
+val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
 
 val beaconScanner = BeaconScanner.Builder()
     .setBeaconParser(beaconParser)

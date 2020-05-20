@@ -11,7 +11,7 @@ import static java.util.Arrays.asList;
 
 public final class BeaconParserFactory {
 
-    private static final int ALTBEACON_MANUFACTURER_ID = 280;
+    private static final int ALTBEACON_MANUFACTURER_ID = 0x0118;
 
     private static final List<String> SUPPORTED_PREFIXES = asList("m", "i", "p", "d");
 
@@ -25,6 +25,11 @@ public final class BeaconParserFactory {
         "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
         ALTBEACON_MANUFACTURER_ID
     );
+
+    @SuppressWarnings("WeakerAccess")
+    public static IBeaconParser createFromLayout(@NonNull String beaconLayout) {
+        return createFromLayout(beaconLayout, 0x004C);
+    }
 
     @SuppressWarnings("WeakerAccess")
     public static IBeaconParser createFromLayout(@NonNull String beaconLayout,
