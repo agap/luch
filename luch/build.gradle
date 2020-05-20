@@ -1,20 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'checkstyle'
-
-checkstyle {
-    toolVersion = '7.4'
-}
-
-task checkstyle(type: Checkstyle) {
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-    exclude '**/R.java'
-    exclude '**/BuildConfig.java'
-    classpath = files()
-}
-
-check.dependsOn 'checkstyle'
+apply from: "$project.projectDir/code-quality.gradle"
 
 android {
     compileSdkVersion 29
