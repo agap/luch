@@ -51,6 +51,45 @@ public class BeaconParserTestHelpers {
         );
     }
 
+    public static ScanRecord getScanRecord(@NonNull byte[] beaconType,
+                                           int numberOfExtraBytes)
+            throws IllegalAccessException,
+                    InvocationTargetException,
+                    InstantiationException,
+                    NoSuchMethodException {
+        //noinspection JavaReflectionMemberAccess
+        final Constructor<ScanRecord> constructor = ScanRecord.class.getDeclaredConstructor(
+            List.class,
+            SparseArray.class,
+            Map.class,
+            int.class,
+            int.class,
+            String.class,
+            byte[].class
+        );
+
+        constructor.setAccessible(true);
+
+        final SparseArray<byte[]> manufacturerData = new SparseArray<>();
+        final byte[] manufacturerByteArray = new byte[beaconType.length + numberOfExtraBytes];
+        arraycopy(beaconType, 0, manufacturerByteArray, 0, 2);
+
+        manufacturerData.append(
+            280,
+            manufacturerByteArray
+        );
+
+        return constructor.newInstance(
+            Collections.emptyList(), // service solicitation uuids
+            manufacturerData, // manufacturer specific data
+            Collections.emptyMap(), // service data
+            6, // advertise flags
+            -2147483648, // tx power level
+            null, // local name
+            new byte[0] // raw bytes
+        );
+    }
+
     private static ScanRecord getScanRecord(@NonNull byte[] beaconType,
                                             @NonNull String proximityUuid,
                                             int major,
@@ -122,7 +161,7 @@ public class BeaconParserTestHelpers {
         );
     }
 
-    private static BluetoothDevice getBluetoothDevice(@NonNull String bluetoothAddress)
+    public static BluetoothDevice getBluetoothDevice(@NonNull String bluetoothAddress)
             throws IllegalAccessException,
             InvocationTargetException,
             InstantiationException,

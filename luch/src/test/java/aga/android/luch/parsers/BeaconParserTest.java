@@ -1,6 +1,7 @@
 package aga.android.luch.parsers;
 
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 
 import org.junit.Test;
@@ -17,6 +18,9 @@ import aga.android.luch.Beacon;
 import aga.android.luch.Region;
 
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.getScanRecord;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
 import static org.junit.Assert.assertEquals;
@@ -27,6 +31,65 @@ import static org.junit.Assert.assertNull;
 public class BeaconParserTest {
 
     private final IBeaconParser parser = BeaconParserFactory.ALTBEACON_PARSER;
+
+    @Test
+    public void testScanResultNotHavingScanRecordReturnNullReferenceOnParseAttempt()
+            throws InvocationTargetException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException {
+        // given
+        final ScanResult scanResult = new ScanResult(
+            getBluetoothDevice("00:11:22:33:FF:EE"),
+            null,
+            -95,
+            769642079079204L
+        );
+
+        // when
+        final Beacon beacon = parser.parse(scanResult);
+
+        // then
+        assertNull(beacon);
+    }
+
+    @Test
+    public void testRegionFieldsOrderMismatchLeadsToRegionBeingIgnored() {
+        // given
+        final Region region = new Region.Builder()
+            .addNullField()
+            .addIntegerField(100)
+            .build();
+
+        // when
+        final List<ScanFilter> filters = parser.asScanFilters(singletonList(region));
+
+        // then
+        assertEquals(emptyList(), filters);
+    }
+
+    @Test
+    public void testNotHavingEnoughDataToParseLeadsToScanResultBeingIgnored()
+            throws InvocationTargetException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException {
+        // given
+        final ScanRecord scanRecord = getScanRecord(new byte[] {(byte) 0xBE, (byte) 0xAC}, 10);
+
+        final ScanResult scanResult = new ScanResult(
+            getBluetoothDevice("00:11:22:33:FF:EE"),
+            scanRecord,
+            -95,
+            769642079079204L
+        );
+
+        // when
+        final Beacon beacon = parser.parse(scanResult);
+
+        // then
+        assertNull(beacon);
+    }
 
     @Test
     public void testAltBeaconHavingAllFieldsIsParsedCorrectly()

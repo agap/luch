@@ -21,6 +21,10 @@ public final class BeaconParserFactory {
         new UuidFieldConverter()
     );
 
+    private BeaconParserFactory() {
+        // no instances please
+    }
+
     public static final IBeaconParser ALTBEACON_PARSER = createFromLayout(
         "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25",
         ALTBEACON_MANUFACTURER_ID
@@ -72,7 +76,7 @@ public final class BeaconParserFactory {
             }
         }
 
-        if (beaconType == null || beaconTypeFieldPosition == -1) {
+        if (beaconType == null) {
             throw new IllegalArgumentException(
                 format("Could not find the beacon type field in the layout %s", beaconLayout)
             );
@@ -106,7 +110,7 @@ public final class BeaconParserFactory {
 
             length = endIndex - startIndex + 1;
         } catch (Exception e) {
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                 format(
                     "Can't parse the field token %s, something is wrong with the field range",
                     token
