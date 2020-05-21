@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.fromString;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class UuidFieldConverterTest {
 
@@ -137,5 +138,11 @@ public class UuidFieldConverterTest {
     public void testUuidObjectCanBeParsed() {
 
         assertTrue(converter.canParse(UUID.class));
+    }
+
+    @Test
+    public void testByteSequenceNotHaving16BytesCanNotBeParsed() {
+
+        assertFalse(converter.canParse(15));
     }
 }
