@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 apply from: "$project.projectDir/code-quality.gradle"
 
 android {
@@ -21,7 +22,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
 
+publish {
+    userOrg = 'agap'
+    groupId = 'aga.android'
+    artifactId = 'luch'
+    publishVersion = '0.1'
+    desc = 'Small & easy to use Android library for beacon monitoring'
+    website = 'https://github.com/agap/luch'
+
+    bintrayUser = System.getenv("bintrayUser")
+    bintrayKey = System.getenv("bintrayKey")
 }
 
 dependencies {
