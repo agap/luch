@@ -16,6 +16,9 @@ jobs:
         java-version: 1.8
       
     - name: Publish Library
+      env:
+        BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+        BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
       run: ./gradlew luch:publishLuchRelease
 
     - name: Upload code coverage reports to codecov
