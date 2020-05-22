@@ -16,7 +16,7 @@ jobs:
         java-version: 1.8
       
     - name: Publish Library
-      run: ./gradlew clean build bintrayUpload
+      run: ./gradlew luch:publichLuchRelease
 
     - name: Upload code coverage reports to codecov
       uses: codecov/codecov-action@v1

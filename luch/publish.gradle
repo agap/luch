@@ -38,3 +38,14 @@ bintray {
         }
     }
 }
+
+task publishLuchRelease {
+    dependsOn 'clean'
+    dependsOn 'assemble'
+    dependsOn 'check'
+    dependsOn 'bintrayUpload'
+
+    tasks.findByName('assemble').mustRunAfter 'clean'
+    tasks.findByName('check').mustRunAfter 'assemble'
+    tasks.findByName('bintrayUpload').mustRunAfter 'check'
+}
