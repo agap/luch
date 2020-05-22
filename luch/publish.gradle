@@ -5,10 +5,16 @@ apply plugin: 'com.palantir.git-version'
 version versionDetails().lastTag
 group 'aga.android'
 
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "sources"
+}
+
 publishing {
     publications {
         Production(MavenPublication) {
             artifact("$buildDir/outputs/aar/luch-release.aar")
+            artifact sourceJar
             groupId 'aga.android'
             artifactId 'luch'
             version this.version
