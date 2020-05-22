@@ -1,7 +1,8 @@
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.palantir.git-version'
 
-version '0.1.0'
+version versionDetails().lastTag
 group 'aga.android'
 
 publishing {
