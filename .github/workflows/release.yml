@@ -14,9 +14,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    
-    - name: Grant Permission to Execute
-      run: chmod +x gradlew
       
     - name: Publish Library
-      run: ./gradlew clean build bintrayUpload -PbintrayUser=${{ secrets.bintrayUser }} -PbintrayKey=${{ secrets.bintrayKey }}
+      run: ./gradlew clean build bintrayUpload
+
+    - name: Upload code coverage reports to codecov
+      uses: codecov/codecov-action@v1

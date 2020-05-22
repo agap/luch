@@ -1,0 +1,40 @@
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.palantir.git-version'
+
+version versionDetails().lastTag
+group 'aga.android'
+
+publishing {
+    publications {
+        Production(MavenPublication) {
+            artifact("$buildDir/outputs/aar/luch-release.aar")
+            groupId 'aga.android'
+            artifactId 'luch'
+            version this.version
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key  = System.getenv('BINTRAY_API_KEY')
+    publications = ['Production']
+    configurations = ['archives']
+    override = true
+    pkg {
+        repo = 'maven'
+        name = 'luch'
+        description = "Small & easy to use Android library for beacon monitoring"
+        publish = true
+        publicDownloadNumbers = true
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/agap/luch.git'
+        version {
+            name = this.version
+            desc = ""
+            released = new Date()
+            vcsTag = this.version
+        }
+    }
+}

@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
 apply from: "$project.projectDir/code-quality.gradle"
 
 android {
@@ -24,22 +23,10 @@ android {
     }
 }
 
-publish {
-    userOrg = 'agap'
-    groupId = 'aga.android'
-    artifactId = 'luch'
-    publishVersion = '0.1'
-    desc = 'Small & easy to use Android library for beacon monitoring'
-    website = 'https://github.com/agap/luch'
-
-    bintrayUser = System.getenv("bintrayUser")
-    bintrayKey = System.getenv("bintrayKey")
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    compileOnly 'androidx.appcompat:appcompat:1.1.0'
 
     testImplementation 'androidx.test:core:1.0.0'
     testImplementation 'junit:junit:4.12'
@@ -50,3 +37,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
+
+apply from: 'publish.gradle'
