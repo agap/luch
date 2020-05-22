@@ -1,10 +1,27 @@
-![CI](https://github.com/agap/luch/workflows/Testing%20Flow/badge.svg) [![codecov](https://codecov.io/gh/agap/luch/branch/master/graph/badge.svg)](https://codecov.io/gh/agap/luch) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+![CI](https://github.com/agap/luch/workflows/Testing%20Flow/badge.svg) [![codecov](https://codecov.io/gh/agap/luch/branch/master/graph/badge.svg)](https://codecov.io/gh/agap/luch) ![Bintray](https://img.shields.io/bintray/v/agap/maven/luch) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 # Luch
 
 A somewhat simplistic library built with only one purpose in mind - monitor nearby beacons when the app's in the foreground mode. The library is under development, check the demo (`sample` module) to see the example.
 
 Also, in case you're wondering - luch ("луч") means "beam" in Russian.
+
+# Installation
+
+Make sure your project's `build.gradle` defines access to JCenter Repository:
+
+```groovy
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+```
+Add the following dependency to your app module's `build.gradle` file:
+
+```groovy
+implementation 'aga.android:luch:(insert latest version)'
+```
 
 # Basic Usage
 
