@@ -30,7 +30,14 @@ def jacocoFilter = [
     '**/*Exception*.*'
 ]
 
-task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'jacocoTestDebugUnitTestReport') {
+task customJacocoTestReport(type: JacocoReport) {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
+task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'customJacocoTestReport') {
     sourceDirectories.setFrom(files(["$project.projectDir/src/main/java"]))
     classDirectories.setFrom(files([fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: jacocoFilter)]))
     executionData.setFrom(files("${buildDir}/jacoco/testDebugUnitTest.exec"))
