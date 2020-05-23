@@ -23,6 +23,7 @@ public final class BeaconParserFactory {
 
     private BeaconParserFactory() {
         // no instances please
+        // add comment
     }
 
     public static final IBeaconParser ALTBEACON_PARSER = createFromLayout(
