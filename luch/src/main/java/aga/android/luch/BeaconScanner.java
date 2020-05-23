@@ -23,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import static android.os.SystemClock.elapsedRealtime;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public class BeaconScanner implements IScanner {
@@ -52,6 +51,9 @@ public class BeaconScanner implements IScanner {
     private final IBeaconParser beaconParser;
 
     @NonNull
+    private final ITimeProvider timeProvider;
+
+    @NonNull
     private final Map<Beacon, Long> nearbyBeacons = new ConcurrentHashMap<>();
 
     @NonNull
@@ -62,9 +64,11 @@ public class BeaconScanner implements IScanner {
     private BeaconScanner(@NonNull IBleDevice bleDevice,
                           @NonNull ScanExecutorProvider scheduledExecutorProvider,
                           @NonNull IBeaconParser beaconParser,
+                          @NonNull ITimeProvider timeProvider,
                           @NonNull ScanDuration scanDuration) {
         this.bleDevice = bleDevice;
         this.beaconParser = beaconParser;
+        this.timeProvider = timeProvider;
         this.scanDuration = scanDuration;
         this.uiHandler = new Handler();
         this.scheduledExecutorProvider = scheduledExecutorProvider;
@@ -103,8 +107,9 @@ public class BeaconScanner implements IScanner {
             final Beacon inMemoryBeacon = iterator.next();
             final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
 
-            if (lastAppearanceMillis != null
-                    && elapsedRealtime() - lastAppearanceMillis > beaconExpirationDurationMillis) {
+            //noinspection ConstantConditions
+            if (timeProvider.elapsedRealTimeTimeMillis() - lastAppearanceMillis
+                    > beaconExpirationDurationMillis) {
 
                 iterator.remove();
             }
@@ -126,6 +131,8 @@ public class BeaconScanner implements IScanner {
         private ScanDuration scanDuration = ScanDuration.UNIFORM;
 
         private IBeaconParser beaconParser = BeaconParserFactory.ALTBEACON_PARSER;
+
+        private ITimeProvider timeProvider = new ITimeProvider.SystemTimeProvider();
 
         private final Context context;
 
@@ -197,7 +204,13 @@ public class BeaconScanner implements IScanner {
         }
 
         @VisibleForTesting
-        Builder setBleDevice(IBleDevice bleDevice) {
+        Builder setTimeProvider(@NonNull ITimeProvider timeProvider) {
+            this.timeProvider = timeProvider;
+            return this;
+        }
+
+        @VisibleForTesting
+        Builder setBleDevice(@NonNull IBleDevice bleDevice) {
             this.bleDevice = bleDevice;
             return this;
         }
@@ -240,6 +253,7 @@ public class BeaconScanner implements IScanner {
                 bleDevice,
                 scanTasksExecutorProvider,
                 beaconParser,
+                timeProvider,
                 scanDuration
             );
 
@@ -336,7 +350,7 @@ public class BeaconScanner implements IScanner {
                 return;
             }
 
-            nearbyBeacons.put(beacon, elapsedRealtime());
+            nearbyBeacons.put(beacon, timeProvider.elapsedRealTimeTimeMillis());
 
             uiHandler.post(deliverBeaconsJob);
         }

@@ -4,6 +4,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 
+import org.hamcrest.Matchers;
 import org.jmock.lib.concurrent.DeterministicScheduler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,10 +22,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import static aga.android.luch.ScanDuration.preciseDuration;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static java.util.UUID.fromString;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
@@ -125,7 +133,7 @@ public class BeaconScannerTest {
 
         // then
         assertEquals(
-            Collections.singleton(
+            singleton(
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, rssi, data)
@@ -133,6 +141,101 @@ public class BeaconScannerTest {
             ),
             beaconListener.nearbyBeacons
         );
+    }
+
+    @Test
+    public void testScannerEvictsOutdatedBeacons()
+            throws InvocationTargetException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException {
+        // given
+        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
+
+        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+
+        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
+
+        final long beaconExpirationDurationSeconds = 10;
+        final long scanRestDurationSeconds = 6;
+
+        final ScanDuration scanDuration = preciseDuration(
+            SECONDS.toMillis(scanRestDurationSeconds),
+            SECONDS.toMillis(scanRestDurationSeconds)
+        );
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconListener(beaconListener)
+            .setBeaconExpirationDuration(beaconExpirationDurationSeconds)
+            .setScanDuration(scanDuration)
+            .setTimeProvider(timeProvider)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+        final String bluetoothAddress = "00:11:22:33:FF:EE";
+        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final byte rssi = -95;
+        final int major = 15600;
+        final int minor = 395;
+        final byte data = 0x01;
+        final ScanResult scanResult = createAltBeaconScanResult(
+            bluetoothAddress,
+            new byte[] {(byte) 0xBE, (byte) 0xAC},
+            proximityUuid,
+            major,
+            minor,
+            rssi,
+            data
+        );
+
+        // when
+        timeProvider.elapsedRealTimeMillis = 0;
+
+        scanner.start();
+        executorService.tick(10, TimeUnit.MILLISECONDS);
+        bleDevice.transmitScanResult(scanResult);
+        executorService.tick(10, TimeUnit.MILLISECONDS);
+
+        // then
+        // Stage 1 - beacon is delivered
+        assertEquals(
+            singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, rssi, data)
+                )
+            ),
+            beaconListener.nearbyBeacons
+        );
+
+        // when
+        advanceTimeTo(timeProvider, scanRestDurationSeconds + 1);
+
+        // then
+        // Stage 2 - the beacon is still here, since the eviction checks are started after
+        // the very first scan and the beacon's validity is 10 seconds.
+        assertThat(
+            beaconListener.nearbyBeacons,
+            not(is(Matchers.<Beacon>empty()))
+        );
+
+        // when
+        advanceTimeTo(timeProvider, MILLISECONDS.toSeconds(scanDuration.scanDurationMillis) + 5);
+
+        // then
+        // Stage 3 - the beacon is evicted, since the elapsed time is 11 seconds, which is
+        // greater than beacon's validity
+        assertEquals(
+            Collections.<Beacon>emptySet(),
+            beaconListener.nearbyBeacons
+        );
+    }
+
+    private void advanceTimeTo(ITimeProvider.TestTimeProvider timeProvider, long seconds) {
+        timeProvider.elapsedRealTimeMillis = SECONDS.toMillis(seconds);
+        executorService.tick(seconds, SECONDS);
     }
 
     /**
