@@ -1,4 +1,4 @@
-![CI](https://github.com/agap/luch/workflows/CI/badge.svg) [![codecov](https://codecov.io/gh/agap/luch/branch/master/graph/badge.svg)](https://codecov.io/gh/agap/luch) ![Bintray](https://img.shields.io/bintray/v/agap/maven/luch) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+![CI](https://github.com/agap/luch/workflows/CI/badge.svg) [![Maintainability](https://api.codeclimate.com/v1/badges/16b6d5e3528035e9d334/maintainability)](https://codeclimate.com/github/agap/luch/maintainability) [![codecov](https://codecov.io/gh/agap/luch/branch/master/graph/badge.svg)](https://codecov.io/gh/agap/luch) ![Bintray](https://img.shields.io/bintray/v/agap/maven/luch) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 # Luch
 
