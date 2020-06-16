@@ -9,4 +9,6 @@
     <string name="beacon_rssi_value">%d dBm</string>
     <string name="beacon_address">Hardware address</string>
     <string name="location_permission_is_required">Location permission is required</string>
+    <string name="beacon_distance">Distance</string>
+    <string name="beacon_distance_value">%1$.2f meters</string>
 </resources>

@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import static aga.android.luch.ScanDuration.preciseDuration;
+import static aga.android.luch.distance.DistanceCalculatorFactory.getCalculator;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
 import static edu.emory.mathcs.backport.java.util.Collections.emptySet;
@@ -115,6 +116,7 @@ public class BeaconScannerTest {
         final String bluetoothAddress = "00:11:22:33:FF:EE";
         final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
         final byte rssi = -95;
+        final byte txPower = -105;
         final int major = 15600;
         final int minor = 395;
         final byte data = 0x01;
@@ -125,6 +127,7 @@ public class BeaconScannerTest {
             major,
             minor,
             rssi,
+            txPower,
             data
         );
 
@@ -140,7 +143,8 @@ public class BeaconScannerTest {
             singleton(
                 new Beacon(
                     bluetoothAddress,
-                    asList(48812, fromString(proximityUuid), major, minor, rssi, data)
+                    asList(48812, fromString(proximityUuid), major, minor, txPower, data),
+                    getCalculator(4)
                 )
             ),
             beaconListener.nearbyBeacons
@@ -181,6 +185,7 @@ public class BeaconScannerTest {
         final String bluetoothAddress = "00:11:22:33:FF:EE";
         final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
         final byte rssi = -95;
+        final byte txPower = -105;
         final int major = 15600;
         final int minor = 395;
         final byte data = 0x01;
@@ -191,6 +196,7 @@ public class BeaconScannerTest {
             major,
             minor,
             rssi,
+            txPower,
             data
         );
 
@@ -208,7 +214,8 @@ public class BeaconScannerTest {
             singleton(
                 new Beacon(
                     bluetoothAddress,
-                    asList(48812, fromString(proximityUuid), major, minor, rssi, data)
+                    asList(48812, fromString(proximityUuid), major, minor, txPower, data),
+                    getCalculator(4)
                 )
             ),
             beaconListener.nearbyBeacons
@@ -261,6 +268,7 @@ public class BeaconScannerTest {
         final String bluetoothAddress = "00:11:22:33:FF:EE";
         final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
         final byte rssi = -95;
+        final byte txPower = -105;
         final int major = 15600;
         final int minor = 395;
         final byte data = 0x01;
@@ -271,6 +279,7 @@ public class BeaconScannerTest {
             major,
             minor,
             rssi,
+            txPower,
             data
         );
 

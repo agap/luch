@@ -1,6 +1,7 @@
 package aga.android.luch.demo
 
 import aga.android.luch.BeaconLogger
+import aga.android.luch.demo.data.BeaconModel
 import aga.android.luch.demo.data.BeaconsViewModel
 import aga.android.luch.demo.databinding.ActivityMainBinding
 import android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -45,7 +46,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun startObservation() {
         model.beacons.observe(this) { beacons ->
-            adapter.submitList(beacons.toList())
+            adapter.submitList(beacons.toList().map {
+                BeaconModel(
+                    uuid = it.getIdentifierAsUuid(1).toString(),
+                    major = it.getIdentifierAsInt(2),
+                    minor = it.getIdentifierAsInt(3),
+                    rssi = it.rssi.toInt(),
+                    hardwareAddress = it.hardwareAddress,
+                    distance = it.distance
+                )
+            })
         }
     }
 

@@ -365,6 +365,7 @@ public class BeaconScanner implements IScanner {
             }
 
             beacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
+            beacon.setRssi((byte) scanResult.getRssi());
 
             nearbyBeacons.put(Arrays.hashCode(rawBytes), beacon);
 

@@ -1,6 +1,6 @@
 package aga.android.luch.demo
 
-import aga.android.luch.Beacon
+import aga.android.luch.demo.data.BeaconModel
 import aga.android.luch.demo.databinding.BeaconItemViewBinding
 import android.content.Context
 import android.view.LayoutInflater
@@ -14,35 +14,39 @@ class BeaconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     private val binding = BeaconItemViewBinding.bind(itemView)
 
-    fun setBeacon(beacon: Beacon) {
+    fun setBeacon(beacon: BeaconModel) {
 
         with(binding) {
             val resources = itemView.context.resources
 
-            beaconItemUuid.text  = beacon.getIdentifierAsUuid(1).toString()
-            beaconItemMajor.text = beacon.getIdentifierAsInt(2).toString()
-            beaconItemMinor.text = beacon.getIdentifierAsInt(3).toString()
+            beaconItemUuid.text  = beacon.uuid
+            beaconItemMajor.text = beacon.major.toString()
+            beaconItemMinor.text = beacon.minor.toString()
             beaconItemRssi.text  = resources.getString(
-                R.string.beacon_rssi_value, beacon.getIdentifierAsByte(4)
+                R.string.beacon_rssi_value, beacon.rssi
             )
 
             beaconItemAddress.text = beacon.hardwareAddress
+
+            beaconDistance.text = resources.getString(
+                R.string.beacon_distance_value, beacon.distance
+            )
         }
     }
 }
 
-class BeaconDiffCallback: DiffUtil.ItemCallback<Beacon>() {
+class BeaconDiffCallback: DiffUtil.ItemCallback<BeaconModel>() {
 
-    override fun areItemsTheSame(oldItem: Beacon, newItem: Beacon): Boolean {
-        return oldItem.getIdentifierAsUuid(1) == newItem.getIdentifierAsUuid(1)
+    override fun areItemsTheSame(oldItem: BeaconModel, newItem: BeaconModel): Boolean {
+        return oldItem.uuid == newItem.uuid
     }
 
-    override fun areContentsTheSame(oldItem: Beacon, newItem: Beacon): Boolean {
+    override fun areContentsTheSame(oldItem: BeaconModel, newItem: BeaconModel): Boolean {
         return oldItem == newItem
     }
 }
 
-class BeaconsAdapter(context: Context) : ListAdapter<Beacon, BeaconViewHolder>(BeaconDiffCallback()) {
+class BeaconsAdapter(context: Context) : ListAdapter<BeaconModel, BeaconViewHolder>(BeaconDiffCallback()) {
 
     private val inflater = LayoutInflater.from(context)
 

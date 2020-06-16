@@ -27,6 +27,7 @@ public class BeaconParserTestHelpers {
                                                        int major,
                                                        int minor,
                                                        byte rssi,
+                                                       byte txPower,
                                                        byte data)
             throws NoSuchMethodException,
             IllegalAccessException,
@@ -39,7 +40,7 @@ public class BeaconParserTestHelpers {
             proximityUuid,
             major,
             minor,
-            rssi,
+            txPower,
             data
         );
 
@@ -94,7 +95,7 @@ public class BeaconParserTestHelpers {
                                             @NonNull String proximityUuid,
                                             int major,
                                             int minor,
-                                            byte rssi,
+                                            byte txPower,
                                             byte data)
             throws IllegalAccessException,
                 InstantiationException,
@@ -118,7 +119,7 @@ public class BeaconParserTestHelpers {
 
         manufacturerByteArray[0] = beaconType[0];
         manufacturerByteArray[1] = beaconType[1];
-        manufacturerByteArray[22] = rssi; // AltBeacon’s measured RSSI at a 1-meter distance
+        manufacturerByteArray[22] = txPower; // AltBeacon’s measured RSSI at a 1-meter distance
         manufacturerByteArray[23] = data; // Optional data field
 
         arraycopy(

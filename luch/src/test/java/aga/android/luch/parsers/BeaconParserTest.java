@@ -106,6 +106,7 @@ public class BeaconParserTest {
         final int minor = 65520;
 
         final byte rssi = -95;
+        final byte txPower = -105;
         final byte data = 0x01;
 
         final ScanResult scanResult = createAltBeaconScanResult(
@@ -115,6 +116,7 @@ public class BeaconParserTest {
             major,
             minor,
             rssi,
+            txPower,
             data
         );
 
@@ -126,8 +128,9 @@ public class BeaconParserTest {
         assertEquals(fromString(proximityUuid), beacon.getIdentifierAsUuid(1));
         assertEquals(major, beacon.getIdentifierAsInt(2));
         assertEquals(minor, beacon.getIdentifierAsInt(3));
-        assertEquals(rssi, beacon.getIdentifierAsByte(4));
+        assertEquals(txPower, beacon.getIdentifierAsByte(4));
         assertEquals(data, beacon.getIdentifierAsByte(5));
+        assertEquals(rssi, beacon.getRssi());
     }
 
     @Test
@@ -144,6 +147,7 @@ public class BeaconParserTest {
         final int minor = 65520;
 
         final byte rssi = -95;
+        final byte txPower = -105;
         final byte data = 0x01;
 
         final ScanResult scanResult = createAltBeaconScanResult(
@@ -153,6 +157,7 @@ public class BeaconParserTest {
             major,
             minor,
             rssi,
+            txPower,
             data
         );
 
