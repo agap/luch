@@ -1,10 +1,10 @@
 package aga.android.luch;
 
-import java.util.Set;
+import java.util.Collection;
 
 import androidx.annotation.NonNull;
 
 public interface IBeaconListener {
 
-    void onNearbyBeaconsDetected(@NonNull Set<Beacon> beacons);
+    void onNearbyBeaconsDetected(@NonNull Collection<Beacon> beacons);
 }

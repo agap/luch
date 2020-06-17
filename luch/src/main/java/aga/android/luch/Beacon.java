@@ -15,6 +15,8 @@ public class Beacon {
     @NonNull
     private final List beaconIdentifiers;
 
+    private long lastSeenAtSystemClock;
+
     public Beacon(@NonNull String hardwareAddress,
                   @NonNull List beaconIdentifiers) {
         this.hardwareAddress = hardwareAddress;
@@ -37,6 +39,14 @@ public class Beacon {
     @NonNull
     public String getHardwareAddress() {
         return hardwareAddress;
+    }
+
+    long getLastSeenAtSystemClock() {
+        return lastSeenAtSystemClock;
+    }
+
+    void setLastSeenAtSystemClock(long lastSeenAtSystemClock) {
+        this.lastSeenAtSystemClock = lastSeenAtSystemClock;
     }
 
     @Override

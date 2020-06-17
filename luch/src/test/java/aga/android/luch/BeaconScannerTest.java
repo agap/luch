@@ -12,6 +12,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +25,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import static aga.android.luch.ScanDuration.preciseDuration;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
+import static edu.emory.mathcs.backport.java.util.Collections.emptySet;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.UUID.fromString;
@@ -32,6 +35,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
@@ -233,6 +237,113 @@ public class BeaconScannerTest {
         );
     }
 
+    @Test
+    public void testScannerReusesExistingBeaconIfItIsPresent()
+        throws InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException {
+        // given
+        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
+
+        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+
+        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconListener(beaconListener)
+            .setTimeProvider(timeProvider)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+        final String bluetoothAddress = "00:11:22:33:FF:EE";
+        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+        final byte rssi = -95;
+        final int major = 15600;
+        final int minor = 395;
+        final byte data = 0x01;
+        final ScanResult scanResult = createAltBeaconScanResult(
+            bluetoothAddress,
+            new byte[] {(byte) 0xBE, (byte) 0xAC},
+            proximityUuid,
+            major,
+            minor,
+            rssi,
+            data
+        );
+
+        // when
+        scanner.start();
+
+        advanceTimeTo(timeProvider, 1);
+
+        bleDevice.transmitScanResult(scanResult);
+
+        advanceTimeTo(timeProvider, 2);
+
+        final Beacon initialBeacon = beaconListener.nearbyBeacons.iterator().next();
+        final long initialTimestamp = initialBeacon.getLastSeenAtSystemClock();
+
+        advanceTimeTo(timeProvider, 3);
+
+        bleDevice.transmitScanResult(scanResult);
+
+        advanceTimeTo(timeProvider, 4);
+
+        final Beacon updatedBeacon = beaconListener.nearbyBeacons.iterator().next();
+        final long updatedTimestamp = updatedBeacon.getLastSeenAtSystemClock();
+
+        scanner.stop();
+
+        // then
+        assertEquals(initialBeacon, updatedBeacon);
+        assertNotEquals(initialTimestamp, updatedTimestamp);
+    }
+
+    @Test
+    public void testMalformedScanResultDoesNotCrashBeaconHandler()
+        throws InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException {
+
+        // given
+        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
+
+        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconListener(beaconListener)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+        final ScanResult scanResult = new ScanResult(
+            getBluetoothDevice("00:11:22:33:FF:EE"),
+            null,
+            -95,
+            0
+        );
+
+        // when
+        scanner.start();
+
+        executorService.tick(10, MILLISECONDS);
+
+        bleDevice.transmitScanResult(scanResult);
+
+        executorService.tick(10, MILLISECONDS);
+
+        // then
+        assertEquals(
+            emptySet(),
+            beaconListener.nearbyBeacons
+        );
+    }
+
     private void advanceTimeTo(ITimeProvider.TestTimeProvider timeProvider, long seconds) {
         timeProvider.elapsedRealTimeMillis = SECONDS.toMillis(seconds);
         executorService.tick(seconds, SECONDS);
@@ -274,7 +385,7 @@ public class BeaconScannerTest {
         final Set<Beacon> nearbyBeacons = new HashSet<>();
 
         @Override
-        public void onNearbyBeaconsDetected(@NonNull Set<Beacon> beacons) {
+        public void onNearbyBeaconsDetected(@NonNull Collection<Beacon> beacons) {
             nearbyBeacons.clear();
             nearbyBeacons.addAll(beacons);
         }
