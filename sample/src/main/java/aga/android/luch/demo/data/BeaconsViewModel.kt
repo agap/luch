@@ -8,5 +8,5 @@ import androidx.lifecycle.ViewModel
 
 class BeaconsViewModel(application: Application) : AndroidViewModel(application) {
 
-    val beacons: LiveData<Set<Beacon>> = BeaconLiveData(application)
+    val beacons: LiveData<Collection<Beacon>> = BeaconLiveData(application)
 }

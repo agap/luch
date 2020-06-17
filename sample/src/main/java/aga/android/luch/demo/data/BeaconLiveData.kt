@@ -10,7 +10,7 @@ import android.app.Application
 import android.os.Build
 import androidx.lifecycle.LiveData
 
-class BeaconLiveData(application: Application) : LiveData<Set<Beacon>>() {
+class BeaconLiveData(application: Application) : LiveData<Collection<Beacon>>() {
 
     private val listener: IBeaconListener = IBeaconListener { beacons ->
         value = beacons

@@ -2,12 +2,14 @@ package aga.android.luch;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public class BeaconScanner implements IScanner {
@@ -54,7 +57,7 @@ public class BeaconScanner implements IScanner {
     private final ITimeProvider timeProvider;
 
     @NonNull
-    private final Map<Beacon, Long> nearbyBeacons = new ConcurrentHashMap<>();
+    private final Map<Integer, Beacon> nearbyBeacons = new ConcurrentHashMap<>();
 
     @NonNull
     private final ScanDuration scanDuration;
@@ -101,14 +104,13 @@ public class BeaconScanner implements IScanner {
     }
 
     private void evictOutdatedBeacons() {
-        final Iterator<Beacon> iterator = nearbyBeacons.keySet().iterator();
+        final Iterator<Map.Entry<Integer, Beacon>> iterator = nearbyBeacons.entrySet().iterator();
 
         for (; iterator.hasNext();) {
-            final Beacon inMemoryBeacon = iterator.next();
-            final Long lastAppearanceMillis = nearbyBeacons.get(inMemoryBeacon);
+            final Beacon inMemoryBeacon = iterator.next().getValue();
+            final long lastSeenAt = requireNonNull(inMemoryBeacon).getLastSeenAtSystemClock();
 
-            //noinspection ConstantConditions
-            if (timeProvider.elapsedRealTimeTimeMillis() - lastAppearanceMillis
+            if (timeProvider.elapsedRealTimeTimeMillis() - lastSeenAt
                     > beaconExpirationDurationMillis) {
 
                 iterator.remove();
@@ -270,7 +272,7 @@ public class BeaconScanner implements IScanner {
         @Override
         public void run() {
             if (beaconListener != null) {
-                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.keySet());
+                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.values());
             }
         }
     };
@@ -344,13 +346,27 @@ public class BeaconScanner implements IScanner {
 
         @Override
         public void run() {
-            final Beacon beacon = beaconParser.parse(scanResult);
+            final ScanRecord scanRecord = scanResult.getScanRecord();
+
+            if (scanRecord == null) {
+                return;
+            }
+
+            final byte[] rawBytes = scanRecord.getBytes();
+
+            Beacon beacon = nearbyBeacons.get(Arrays.hashCode(rawBytes));
+
+            if (beacon == null) {
+                beacon = beaconParser.parse(scanResult);
+            }
 
             if (beacon == null) {
                 return;
             }
 
-            nearbyBeacons.put(beacon, timeProvider.elapsedRealTimeTimeMillis());
+            beacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
+
+            nearbyBeacons.put(Arrays.hashCode(rawBytes), beacon);
 
             uiHandler.post(deliverBeaconsJob);
         }
