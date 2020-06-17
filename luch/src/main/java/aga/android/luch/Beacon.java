@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import aga.android.luch.distance.AbstractDistanceCalculator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -15,12 +16,19 @@ public class Beacon {
     @NonNull
     private final List beaconIdentifiers;
 
+    @Nullable
+    private final AbstractDistanceCalculator distanceCalculator;
+
+    private byte rssi;
+
     private long lastSeenAtSystemClock;
 
     public Beacon(@NonNull String hardwareAddress,
-                  @NonNull List beaconIdentifiers) {
+                  @NonNull List beaconIdentifiers,
+                  @Nullable AbstractDistanceCalculator distanceCalculator) {
         this.hardwareAddress = hardwareAddress;
         this.beaconIdentifiers = beaconIdentifiers;
+        this.distanceCalculator = distanceCalculator;
     }
 
     @Nullable
@@ -34,6 +42,23 @@ public class Beacon {
 
     public byte getIdentifierAsByte(int index) {
         return (byte) beaconIdentifiers.get(index);
+    }
+
+    public byte getRssi() {
+        return rssi;
+    }
+
+    // todo should it really be public?
+    public void setRssi(byte rssi) {
+        this.rssi = rssi;
+    }
+
+    public double getDistance() {
+        if (distanceCalculator == null) {
+            return Double.MAX_VALUE;
+        } else {
+            return distanceCalculator.getDistance(this);
+        }
     }
 
     @NonNull
@@ -68,6 +93,7 @@ public class Beacon {
     public String toString() {
         return "Beacon{"
             + "hardwareAddress='" + hardwareAddress + '\''
+            + ", rssi=" + rssi
             + ", beaconIdentifiers=" + beaconIdentifiers
             + '}';
     }

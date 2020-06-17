@@ -11,6 +11,7 @@ import java.util.Locale;
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
 import aga.android.luch.Region;
+import aga.android.luch.distance.AbstractDistanceCalculator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -28,11 +29,15 @@ final class BeaconParser implements IBeaconParser {
 
     private final int manufacturerId;
 
+    private final AbstractDistanceCalculator distanceCalculator;
+
     BeaconParser(@NonNull List<? extends IFieldConverter> fieldConverters,
-                         int beaconTypePosition,
-                         int manufacturerId,
-                         Object beaconType) {
+                 @Nullable AbstractDistanceCalculator distanceCalculator,
+                 int beaconTypePosition,
+                 int manufacturerId,
+                 Object beaconType) {
         this.fieldConverters.addAll(fieldConverters);
+        this.distanceCalculator = distanceCalculator;
         this.beaconTypePosition = beaconTypePosition;
         this.manufacturerId = manufacturerId;
         this.beaconType = beaconType;
@@ -80,10 +85,15 @@ final class BeaconParser implements IBeaconParser {
                     }
                 }
 
-                return new Beacon(
+                final Beacon beacon = new Beacon(
                     scanResult.getDevice().getAddress(),
-                    identifiers
+                    identifiers,
+                    distanceCalculator
                 );
+
+                beacon.setRssi((byte) scanResult.getRssi());
+
+                return beacon;
 
             } catch (Exception e) {
                 BeaconLogger.e(
