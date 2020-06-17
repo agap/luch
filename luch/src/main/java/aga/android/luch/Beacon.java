@@ -48,11 +48,11 @@ public class Beacon {
         return rssi;
     }
 
-    void setRssi(byte rssi) {
+    // todo should it really be public?
+    public void setRssi(byte rssi) {
         this.rssi = rssi;
     }
 
-    //todo test me
     public double getDistance() {
         if (distanceCalculator == null) {
             return Double.MAX_VALUE;

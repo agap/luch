@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
  * The extensions of this class calculate the distance to the given beacon based on its rssi and
  * txPower values.
  */
-abstract public class AbstractDistanceCalculator {
+public abstract class AbstractDistanceCalculator {
 
     private final int txPowerPosition;
 
@@ -19,5 +19,5 @@ abstract public class AbstractDistanceCalculator {
         return beacon.getIdentifierAsByte(txPowerPosition);
     }
 
-    abstract public double getDistance(@NonNull Beacon beacon);
+    public abstract double getDistance(@NonNull Beacon beacon);
 }

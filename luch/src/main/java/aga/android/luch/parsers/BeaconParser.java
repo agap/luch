@@ -85,11 +85,15 @@ final class BeaconParser implements IBeaconParser {
                     }
                 }
 
-                return new Beacon(
+                final Beacon beacon = new Beacon(
                     scanResult.getDevice().getAddress(),
                     identifiers,
                     distanceCalculator
                 );
+
+                beacon.setRssi((byte) scanResult.getRssi());
+
+                return beacon;
 
             } catch (Exception e) {
                 BeaconLogger.e(

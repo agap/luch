@@ -1,6 +1,10 @@
 package aga.android.luch.distance;
 
-public class DistanceCalculatorFactory {
+public final class DistanceCalculatorFactory {
+
+    private DistanceCalculatorFactory() {
+        // no instances please
+    }
 
     public static AbstractDistanceCalculator getCalculator(int txPowerPosition) {
 
