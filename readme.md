@@ -121,7 +121,7 @@ val beaconScanner = BeaconScanner.Builder()
 
 The format of beacon layouts is somewhat similar to the one supported by [AltBeacon](https://altbeacon.github.io/android-beacon-library/javadoc/reference/org/altbeacon/beacon/BeaconParser.html) (see `setBeaconLayout` method) with the number of exceptions:
 
-1. The only field prefixes supported at the moment are 'm', 'i', 'p' and'd'.
+1. The only field prefixes supported at the moment are 'm', 'i', 'p' and 'd'.
 2. Little-endian fields are not supported yet, as variable-length fields.
 
 ## Logs
@@ -155,5 +155,4 @@ So there will be no background mode support unless I decide it's possible to do 
 ## What's the point of this library then?
 
 1. I want something simple, without background mode, beacon caching, ranging, and all that stuff. The more code we put into production, the less stable the result becomes.
-2. I need the APIs to look a bit different compared to altbeacon, all I want is to be notified periodically about which beacons are near me, without individual beacon enter/exit events.
-3. Just have some fun. :)
+2. Just have some fun. :)
