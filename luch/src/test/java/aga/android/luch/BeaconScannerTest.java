@@ -43,6 +43,14 @@ import static org.junit.Assert.assertThat;
 @Config(sdk = 21, manifest = Config.NONE)
 public class BeaconScannerTest {
 
+    private final String bluetoothAddress = "00:11:22:33:FF:EE";
+    private final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
+    private final byte rssi = -95;
+    private final byte txPower = -105;
+    private final int major = 15600;
+    private final int minor = 395;
+    private final byte data = 0x01;
+
     // By using the DeterministicScheduler from jmock we can rely on the virtual time instead of
     // the real time, which makes our tests less error-prone and much faster to run.
     private final DeterministicScheduler executorService = new DeterministicScheduler();
@@ -113,23 +121,7 @@ public class BeaconScannerTest {
             .setScanTasksExecutor(executorProvider)
             .build();
 
-        final String bluetoothAddress = "00:11:22:33:FF:EE";
-        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final byte rssi = -95;
-        final byte txPower = -105;
-        final int major = 15600;
-        final int minor = 395;
-        final byte data = 0x01;
-        final ScanResult scanResult = createAltBeaconScanResult(
-            bluetoothAddress,
-            new byte[] {(byte) 0xBE, (byte) 0xAC},
-            proximityUuid,
-            major,
-            minor,
-            rssi,
-            txPower,
-            data
-        );
+        final ScanResult scanResult = getScanResult();
 
         // when
         scanner.start();
@@ -182,23 +174,8 @@ public class BeaconScannerTest {
             .setScanTasksExecutor(executorProvider)
             .build();
 
-        final String bluetoothAddress = "00:11:22:33:FF:EE";
-        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final byte rssi = -95;
-        final byte txPower = -105;
-        final int major = 15600;
-        final int minor = 395;
-        final byte data = 0x01;
-        final ScanResult scanResult = createAltBeaconScanResult(
-            bluetoothAddress,
-            new byte[] {(byte) 0xBE, (byte) 0xAC},
-            proximityUuid,
-            major,
-            minor,
-            rssi,
-            txPower,
-            data
-        );
+
+        final ScanResult scanResult = getScanResult();
 
         // when
         timeProvider.elapsedRealTimeMillis = 0;
@@ -265,23 +242,7 @@ public class BeaconScannerTest {
             .setScanTasksExecutor(executorProvider)
             .build();
 
-        final String bluetoothAddress = "00:11:22:33:FF:EE";
-        final String proximityUuid = "E56E1F2C-C756-476F-8323-8D1F9CD245EA";
-        final byte rssi = -95;
-        final byte txPower = -105;
-        final int major = 15600;
-        final int minor = 395;
-        final byte data = 0x01;
-        final ScanResult scanResult = createAltBeaconScanResult(
-            bluetoothAddress,
-            new byte[] {(byte) 0xBE, (byte) 0xAC},
-            proximityUuid,
-            major,
-            minor,
-            rssi,
-            txPower,
-            data
-        );
+        final ScanResult scanResult = getScanResult();
 
         // when
         scanner.start();
@@ -350,6 +311,24 @@ public class BeaconScannerTest {
         assertEquals(
             emptySet(),
             beaconListener.nearbyBeacons
+        );
+    }
+
+    private ScanResult getScanResult()
+        throws InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException {
+
+        return createAltBeaconScanResult(
+            bluetoothAddress,
+            new byte[] {(byte) 0xBE, (byte) 0xAC},
+            proximityUuid,
+            major,
+            minor,
+            rssi,
+            txPower,
+            data
         );
     }
 
