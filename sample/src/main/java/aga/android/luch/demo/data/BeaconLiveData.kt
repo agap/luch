@@ -2,7 +2,7 @@ package aga.android.luch.demo.data
 
 import aga.android.luch.Beacon
 import aga.android.luch.BeaconScanner
-import aga.android.luch.IBeaconListener
+import aga.android.luch.IBeaconBatchListener
 import aga.android.luch.IScanner
 import aga.android.luch.ScanDuration
 import android.annotation.SuppressLint
@@ -12,7 +12,7 @@ import androidx.lifecycle.LiveData
 
 class BeaconLiveData(application: Application) : LiveData<Collection<Beacon>>() {
 
-    private val listener: IBeaconListener = IBeaconListener { beacons ->
+    private val batchListener: IBeaconBatchListener = IBeaconBatchListener { beacons ->
         value = beacons
     }
 
@@ -25,7 +25,7 @@ class BeaconLiveData(application: Application) : LiveData<Collection<Beacon>>() 
                 ScanDuration.UNIFORM
             }
         )
-        .setBeaconListener(listener)
+        .setBeaconBatchListener(batchListener)
         .build()
 
     // Check is suppressed since permission checks should happen on the Fragment/Activity level,

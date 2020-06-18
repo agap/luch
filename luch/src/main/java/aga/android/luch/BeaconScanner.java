@@ -39,6 +39,9 @@ public class BeaconScanner implements IScanner {
     private final BeaconScanCallback scanCallback = new BeaconScanCallback();
 
     @Nullable
+    private IBeaconBatchListener beaconBatchListener = null;
+
+    @Nullable
     private IBeaconListener beaconListener = null;
 
     @NonNull
@@ -114,15 +117,28 @@ public class BeaconScanner implements IScanner {
                     > beaconExpirationDurationMillis) {
 
                 iterator.remove();
+
+                if (beaconListener != null) {
+                    uiHandler.post(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                beaconListener.onBeaconExited(inMemoryBeacon);
+                            }
+                        }
+                    );
+                }
             }
         }
 
-        uiHandler.post(deliverBeaconsJob);
+        uiHandler.post(deliverBeaconBatchJob);
     }
 
     public static final class Builder {
 
-        private IBeaconListener listener = null;
+        private IBeaconBatchListener beaconBatchListener = null;
+
+        private IBeaconListener beaconListener = null;
 
         private List<Region> regions = Collections.emptyList();
 
@@ -150,11 +166,20 @@ public class BeaconScanner implements IScanner {
         }
 
         /**
-         * Sets the {@link IBeaconListener} implementation which will be notified every time the
-         * change in the nearby beacons occurs.
+         * Sets the {@link IBeaconBatchListener} implementation which will be notified every time
+         * the change in the nearby beacons occurs.
+         */
+        public Builder setBeaconBatchListener(IBeaconBatchListener listener) {
+            this.beaconBatchListener = listener;
+            return this;
+        }
+
+        /**
+         * Sets the {@link IBeaconListener} implementation which will be notified every time we
+         * detect a new beacon or a previously detected beacon gets lost
          */
         public Builder setBeaconListener(IBeaconListener listener) {
-            this.listener = listener;
+            this.beaconListener = listener;
             return this;
         }
 
@@ -262,17 +287,18 @@ public class BeaconScanner implements IScanner {
             scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
                 beaconExpirationDurationSeconds
             );
-            scanner.beaconListener = listener;
+            scanner.beaconBatchListener = beaconBatchListener;
+            scanner.beaconListener = beaconListener;
 
             return scanner;
         }
     }
 
-    private final Runnable deliverBeaconsJob = new Runnable() {
+    private final Runnable deliverBeaconBatchJob = new Runnable() {
         @Override
         public void run() {
-            if (beaconListener != null) {
-                beaconListener.onNearbyBeaconsDetected(nearbyBeacons.values());
+            if (beaconBatchListener != null) {
+                beaconBatchListener.onBeaconsDetected(nearbyBeacons.values());
             }
         }
     };
@@ -354,22 +380,36 @@ public class BeaconScanner implements IScanner {
 
             final byte[] rawBytes = scanRecord.getBytes();
 
-            Beacon beacon = nearbyBeacons.get(Arrays.hashCode(rawBytes));
+            final Beacon inMemoryBeacon = nearbyBeacons.get(Arrays.hashCode(rawBytes));
 
-            if (beacon == null) {
-                beacon = beaconParser.parse(scanResult);
+            if (inMemoryBeacon != null) {
+                inMemoryBeacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
+                inMemoryBeacon.setRssi((byte) scanResult.getRssi());
+            } else {
+                final Beacon parsedBeacon = beaconParser.parse(scanResult);
+
+                if (parsedBeacon == null) {
+                    return;
+                }
+
+                parsedBeacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
+                parsedBeacon.setRssi((byte) scanResult.getRssi());
+
+                nearbyBeacons.put(Arrays.hashCode(rawBytes), parsedBeacon);
+
+                if (beaconListener != null) {
+                    uiHandler.post(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                beaconListener.onBeaconEntered(parsedBeacon);
+                            }
+                        }
+                    );
+                }
             }
 
-            if (beacon == null) {
-                return;
-            }
-
-            beacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
-            beacon.setRssi((byte) scanResult.getRssi());
-
-            nearbyBeacons.put(Arrays.hashCode(rawBytes), beacon);
-
-            uiHandler.post(deliverBeaconsJob);
+            uiHandler.post(deliverBeaconBatchJob);
         }
     }
 
