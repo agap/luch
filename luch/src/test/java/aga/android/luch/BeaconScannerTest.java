@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanSettings;
 
 import org.hamcrest.Matchers;
 import org.jmock.lib.concurrent.DeterministicScheduler;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -17,8 +18,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
+import aga.android.luch.ITimeProvider.TestTimeProvider;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
@@ -34,6 +35,7 @@ import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -51,6 +53,12 @@ public class BeaconScannerTest {
     private final int minor = 395;
     private final byte data = 0x01;
 
+    private final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
+
+    private final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+
+    private final TestTimeProvider timeProvider = new TestTimeProvider();
+
     // By using the DeterministicScheduler from jmock we can rely on the virtual time instead of
     // the real time, which makes our tests less error-prone and much faster to run.
     private final DeterministicScheduler executorService = new DeterministicScheduler();
@@ -61,6 +69,12 @@ public class BeaconScannerTest {
             return executorService;
         }
     };
+
+    @Before
+    public void setup() {
+        beaconListener.clear();
+        timeProvider.elapsedRealTimeMillis = 0L;
+    }
 
     @Test(expected = AssertionError.class)
     public void testNegativeBeaconValidityDurationIsNotAccepted() {
@@ -90,13 +104,16 @@ public class BeaconScannerTest {
 
         // when
         scanner.start();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
+
         scanner.stop();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
+
         scanner.start();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
+
         scanner.stop();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
 
         // then
         assertEquals(2, bleDevice.starts);
@@ -110,10 +127,6 @@ public class BeaconScannerTest {
                     InstantiationException,
                     IllegalAccessException {
         // given
-        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
-
-        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
-
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
@@ -125,9 +138,9 @@ public class BeaconScannerTest {
 
         // when
         scanner.start();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
         bleDevice.transmitScanResult(scanResult);
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(10);
         scanner.stop();
 
         // then
@@ -150,12 +163,6 @@ public class BeaconScannerTest {
                     InstantiationException,
                     IllegalAccessException {
         // given
-        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
-
-        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
-
-        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
-
         final long beaconExpirationDurationSeconds = 10;
         final long scanRestDurationSeconds = 6;
 
@@ -178,12 +185,11 @@ public class BeaconScannerTest {
         final ScanResult scanResult = getScanResult();
 
         // when
-        timeProvider.elapsedRealTimeMillis = 0;
-
         scanner.start();
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+
+        advanceTimeBy(10);
         bleDevice.transmitScanResult(scanResult);
-        executorService.tick(10, TimeUnit.MILLISECONDS);
+        advanceTimeBy(20);
 
         // then
         // Stage 1 - beacon is delivered
@@ -199,7 +205,7 @@ public class BeaconScannerTest {
         );
 
         // when
-        advanceTimeTo(timeProvider, scanRestDurationSeconds + 1);
+        advanceTimeBy(7_000);
 
         // then
         // Stage 2 - the beacon is still here, since the eviction checks are started after
@@ -210,11 +216,82 @@ public class BeaconScannerTest {
         );
 
         // when
-        advanceTimeTo(timeProvider, MILLISECONDS.toSeconds(scanDuration.scanDurationMillis) + 5);
+        advanceTimeBy(4_000);
 
         // then
         // Stage 3 - the beacon is evicted, since the elapsed time is 11 seconds, which is
         // greater than beacon's validity
+        assertEquals(
+            Collections.<Beacon>emptySet(),
+            beaconListener.nearbyBeacons
+        );
+    }
+
+    @Test
+    public void testScannerInvokesEnterExitCallbacks()
+        throws NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException,
+            InvocationTargetException {
+        // given
+        final long beaconExpirationDurationSeconds = 10;
+        final long scanRestDurationSeconds = 6;
+
+        final ScanDuration scanDuration = preciseDuration(
+            SECONDS.toMillis(scanRestDurationSeconds),
+            SECONDS.toMillis(scanRestDurationSeconds)
+        );
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconListener(beaconListener)
+            .setBeaconExpirationDuration(beaconExpirationDurationSeconds)
+            .setScanDuration(scanDuration)
+            .setTimeProvider(timeProvider)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+        final ScanResult scanResult = getScanResult();
+
+        // when
+        scanner.start();
+        advanceTimeBy(10);
+        bleDevice.transmitScanResult(scanResult);
+        advanceTimeBy(10);
+
+        // then
+        // Stage 1 - beacon is delivered
+        assertEquals(
+            singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, txPower, data),
+                    getCalculator(4)
+                )
+            ),
+            beaconListener.nearbyBeacons
+        );
+
+        // when
+        advanceTimeBy(7_000);
+        bleDevice.transmitScanResult(scanResult);
+        advanceTimeBy(10);
+
+        // then
+        // Stage 2 - the beacon was not redelivered again as it's the same beacon.
+        assertThat(
+            beaconListener.nearbyBeacons,
+            hasSize(1)
+        );
+
+        // when
+        advanceTimeBy(11_000);
+
+        // then
+        // Stage 3 - the beacon is evicted, since it was seen at 7_020 millis,
+        // elapsed time is 18_030 millis, 18_030 - 7_020 = 11_010 which is greater than
+        // beacon's validity time.
         assertEquals(
             Collections.<Beacon>emptySet(),
             beaconListener.nearbyBeacons
@@ -228,12 +305,6 @@ public class BeaconScannerTest {
             InstantiationException,
             IllegalAccessException {
         // given
-        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
-
-        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
-
-        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
-
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
@@ -247,20 +318,20 @@ public class BeaconScannerTest {
         // when
         scanner.start();
 
-        advanceTimeTo(timeProvider, 1);
+        advanceTimeBy(1_000);
 
         bleDevice.transmitScanResult(scanResult);
 
-        advanceTimeTo(timeProvider, 2);
+        advanceTimeBy(1_000);
 
         final Beacon initialBeacon = beaconListener.nearbyBeacons.iterator().next();
         final long initialTimestamp = initialBeacon.getLastSeenAtSystemClock();
 
-        advanceTimeTo(timeProvider, 3);
+        advanceTimeBy(1_000);
 
         bleDevice.transmitScanResult(scanResult);
 
-        advanceTimeTo(timeProvider, 4);
+        advanceTimeBy(1_000);
 
         final Beacon updatedBeacon = beaconListener.nearbyBeacons.iterator().next();
         final long updatedTimestamp = updatedBeacon.getLastSeenAtSystemClock();
@@ -280,10 +351,6 @@ public class BeaconScannerTest {
             IllegalAccessException {
 
         // given
-        final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
-
-        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
-
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
@@ -301,11 +368,11 @@ public class BeaconScannerTest {
         // when
         scanner.start();
 
-        executorService.tick(10, MILLISECONDS);
+        advanceTimeBy(10);
 
         bleDevice.transmitScanResult(scanResult);
 
-        executorService.tick(10, MILLISECONDS);
+        advanceTimeBy(10);
 
         // then
         assertEquals(
@@ -332,9 +399,9 @@ public class BeaconScannerTest {
         );
     }
 
-    private void advanceTimeTo(ITimeProvider.TestTimeProvider timeProvider, long seconds) {
-        timeProvider.elapsedRealTimeMillis = SECONDS.toMillis(seconds);
-        executorService.tick(seconds, SECONDS);
+    private void advanceTimeBy(long millis) {
+        timeProvider.elapsedRealTimeMillis = timeProvider.elapsedRealTimeMillis + millis;
+        executorService.tick(millis, MILLISECONDS);
     }
 
     /**
@@ -368,14 +435,29 @@ public class BeaconScannerTest {
         }
     }
 
-    private static final class RecordingBeaconBatchListener implements IBeaconBatchListener {
+    private static final class RecordingBeaconListener
+        implements IBeaconBatchListener, IBeaconListener {
 
         final Set<Beacon> nearbyBeacons = new HashSet<>();
+
+        void clear() {
+            nearbyBeacons.clear();
+        }
 
         @Override
         public void onBeaconsDetected(@NonNull Collection<Beacon> beacons) {
             nearbyBeacons.clear();
             nearbyBeacons.addAll(beacons);
+        }
+
+        @Override
+        public void onBeaconEntered(@NonNull Beacon beacon) {
+            nearbyBeacons.add(beacon);
+        }
+
+        @Override
+        public void onBeaconExited(@NonNull Beacon beacon) {
+            nearbyBeacons.remove(beacon);
         }
     }
 
