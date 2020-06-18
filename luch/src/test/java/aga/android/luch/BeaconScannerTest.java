@@ -104,12 +104,12 @@ public class BeaconScannerTest {
         // given
         final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
 
-        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
 
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
-            .setBeaconListener(beaconListener)
+            .setBeaconBatchListener(beaconListener)
             .setScanTasksExecutor(executorProvider)
             .build();
 
@@ -160,7 +160,7 @@ public class BeaconScannerTest {
         // given
         final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
 
-        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
 
         final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
 
@@ -175,7 +175,7 @@ public class BeaconScannerTest {
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
-            .setBeaconListener(beaconListener)
+            .setBeaconBatchListener(beaconListener)
             .setBeaconExpirationDuration(beaconExpirationDurationSeconds)
             .setScanDuration(scanDuration)
             .setTimeProvider(timeProvider)
@@ -253,14 +253,14 @@ public class BeaconScannerTest {
         // given
         final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
 
-        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
 
         final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
 
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
-            .setBeaconListener(beaconListener)
+            .setBeaconBatchListener(beaconListener)
             .setTimeProvider(timeProvider)
             .setScanTasksExecutor(executorProvider)
             .build();
@@ -321,12 +321,12 @@ public class BeaconScannerTest {
         // given
         final RetransmittingFakeBleDevice bleDevice = new RetransmittingFakeBleDevice();
 
-        final RecordingBeaconListener beaconListener = new RecordingBeaconListener();
+        final RecordingBeaconBatchListener beaconListener = new RecordingBeaconBatchListener();
 
         final BeaconScanner scanner = new BeaconScanner
             .Builder(ApplicationProvider.getApplicationContext())
             .setBleDevice(bleDevice)
-            .setBeaconListener(beaconListener)
+            .setBeaconBatchListener(beaconListener)
             .setScanTasksExecutor(executorProvider)
             .build();
 
@@ -365,7 +365,7 @@ public class BeaconScannerTest {
      * {@link RetransmittingFakeBleDevice} in tests, we'll just expose the method that allows us to
      * send an instance of {@link ScanResult} into the {@link ScanCallback} provided by
      * {@link BeaconScanner} and validate that the ScanResult -> Beacon conversion works smooth
-     * and {@link IBeaconListener} instance is called.
+     * and {@link IBeaconBatchListener} instance is called.
      */
     private static final class RetransmittingFakeBleDevice implements IBleDevice {
 
@@ -389,12 +389,12 @@ public class BeaconScannerTest {
         }
     }
 
-    private static final class RecordingBeaconListener implements IBeaconListener {
+    private static final class RecordingBeaconBatchListener implements IBeaconBatchListener {
 
         final Set<Beacon> nearbyBeacons = new HashSet<>();
 
         @Override
-        public void onNearbyBeaconsDetected(@NonNull Collection<Beacon> beacons) {
+        public void onBeaconsDetected(@NonNull Collection<Beacon> beacons) {
             nearbyBeacons.clear();
             nearbyBeacons.addAll(beacons);
         }
