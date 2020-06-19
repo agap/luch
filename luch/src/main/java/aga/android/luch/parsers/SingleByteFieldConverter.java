@@ -22,7 +22,7 @@ class SingleByteFieldConverter implements IFieldConverter<Byte> {
     }
 
     @Override
-    public boolean canParse(@NonNull Class clazz) {
+    public boolean canParse(@NonNull Class<?> clazz) {
         return Byte.class.isAssignableFrom(clazz);
     }
 
