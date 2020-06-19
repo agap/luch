@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import aga.android.luch.distance.Ranger;
+import aga.android.luch.distance.RunningAverageRssiFilter;
 import aga.android.luch.parsers.BeaconParserFactory;
 import aga.android.luch.parsers.IBeaconParser;
 import androidx.annotation.IntRange;
@@ -28,9 +30,10 @@ import androidx.annotation.VisibleForTesting;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-public class BeaconScanner implements IScanner {
+public final class BeaconScanner implements IScanner {
 
     private static final long BEACON_EVICTION_PERIODICITY_MILLIS = 1_000;
+    private static final long RSSI_READINGS_TRIM_PERIODICITY_MILLIS = 1_000;
 
     @NonNull
     private IBleDevice bleDevice;
@@ -43,6 +46,9 @@ public class BeaconScanner implements IScanner {
 
     @Nullable
     private IBeaconListener beaconListener = null;
+
+    @Nullable
+    private final Ranger ranger;
 
     @NonNull
     private final Handler uiHandler;
@@ -71,7 +77,8 @@ public class BeaconScanner implements IScanner {
                           @NonNull ScanExecutorProvider scheduledExecutorProvider,
                           @NonNull IBeaconParser beaconParser,
                           @NonNull ITimeProvider timeProvider,
-                          @NonNull ScanDuration scanDuration) {
+                          @NonNull ScanDuration scanDuration,
+                          @Nullable Ranger ranger) {
         this.bleDevice = bleDevice;
         this.beaconParser = beaconParser;
         this.timeProvider = timeProvider;
@@ -79,6 +86,7 @@ public class BeaconScanner implements IScanner {
         this.uiHandler = new Handler();
         this.scheduledExecutorProvider = scheduledExecutorProvider;
         this.scheduledExecutor = scheduledExecutorProvider.provide();
+        this.ranger = ranger;
     }
 
     @Override
@@ -95,6 +103,15 @@ public class BeaconScanner implements IScanner {
             BEACON_EVICTION_PERIODICITY_MILLIS,
             TimeUnit.MILLISECONDS
         );
+
+        if (ranger != null) {
+            scheduledExecutor.scheduleAtFixedRate(
+                rssiReadingsTrimJob,
+                scanDuration.scanDurationMillis,
+                RSSI_READINGS_TRIM_PERIODICITY_MILLIS,
+                TimeUnit.MILLISECONDS
+            );
+        }
     }
 
     @Override
@@ -104,6 +121,12 @@ public class BeaconScanner implements IScanner {
            0L,
            TimeUnit.MILLISECONDS
        );
+    }
+
+    @Nullable
+    @Override
+    public Ranger getRanger() {
+        return ranger;
     }
 
     private void evictOutdatedBeacons() {
@@ -117,6 +140,10 @@ public class BeaconScanner implements IScanner {
                     > beaconExpirationDurationMillis) {
 
                 iterator.remove();
+
+                if (ranger != null) {
+                    ranger.removeReadings(inMemoryBeacon);
+                }
 
                 if (beaconListener != null) {
                     uiHandler.post(
@@ -151,6 +178,8 @@ public class BeaconScanner implements IScanner {
         private IBeaconParser beaconParser = BeaconParserFactory.ALTBEACON_PARSER;
 
         private ITimeProvider timeProvider = new ITimeProvider.SystemTimeProvider();
+
+        private boolean rangingEnabled = false;
 
         private final Context context;
 
@@ -230,6 +259,18 @@ public class BeaconScanner implements IScanner {
             return this;
         }
 
+        /**
+         * Enables distance calculation for detected beacons. Use {@link BeaconScanner#getRanger()}
+         * to get access to the distance calculator
+         * @param enabled whether or not the distance calculation should be enabled,
+         *                default value is false
+         * @return this object
+         */
+        public Builder setRangingEnabled(boolean enabled) {
+            this.rangingEnabled = enabled;
+            return this;
+        }
+
         @VisibleForTesting
         Builder setTimeProvider(@NonNull ITimeProvider timeProvider) {
             this.timeProvider = timeProvider;
@@ -276,12 +317,22 @@ public class BeaconScanner implements IScanner {
                 );
             }
 
+            Ranger ranger = null;
+
+            if (rangingEnabled) {
+                ranger = new Ranger(
+                    timeProvider,
+                    new RunningAverageRssiFilter()
+                );
+            }
+
             final BeaconScanner scanner = new BeaconScanner(
                 bleDevice,
                 scanTasksExecutorProvider,
                 beaconParser,
                 timeProvider,
-                scanDuration
+                scanDuration,
+                ranger
             );
 
             scanner.beaconExpirationDurationMillis = TimeUnit.SECONDS.toMillis(
@@ -362,6 +413,15 @@ public class BeaconScanner implements IScanner {
         }
     };
 
+    private final Runnable rssiReadingsTrimJob = new Runnable() {
+        @Override
+        public void run() {
+            if (ranger != null) {
+                ranger.trim();
+            }
+        }
+    };
+
     private final class BeaconHandlerJob implements Runnable {
 
         private final ScanResult scanResult;
@@ -382,9 +442,10 @@ public class BeaconScanner implements IScanner {
 
             final Beacon inMemoryBeacon = nearbyBeacons.get(Arrays.hashCode(rawBytes));
 
+            final long elapsedRealTimeTimeMillis = timeProvider.elapsedRealTimeTimeMillis();
+
             if (inMemoryBeacon != null) {
-                inMemoryBeacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
-                inMemoryBeacon.setRssi((byte) scanResult.getRssi());
+                updateBeaconTransientValues(inMemoryBeacon, elapsedRealTimeTimeMillis);
             } else {
                 final Beacon parsedBeacon = beaconParser.parse(scanResult);
 
@@ -392,8 +453,7 @@ public class BeaconScanner implements IScanner {
                     return;
                 }
 
-                parsedBeacon.setLastSeenAtSystemClock(timeProvider.elapsedRealTimeTimeMillis());
-                parsedBeacon.setRssi((byte) scanResult.getRssi());
+                updateBeaconTransientValues(parsedBeacon, elapsedRealTimeTimeMillis);
 
                 nearbyBeacons.put(Arrays.hashCode(rawBytes), parsedBeacon);
 
@@ -410,6 +470,16 @@ public class BeaconScanner implements IScanner {
             }
 
             uiHandler.post(deliverBeaconBatchJob);
+        }
+
+        private void updateBeaconTransientValues(Beacon inMemoryBeacon,
+                                                 long elapsedRealTimeTimeMillis) {
+            inMemoryBeacon.setLastSeenAtSystemClock(elapsedRealTimeTimeMillis);
+            inMemoryBeacon.setRssi((byte) scanResult.getRssi());
+
+            if (ranger != null) {
+                ranger.addReading(inMemoryBeacon, (byte) scanResult.getRssi());
+            }
         }
     }
 

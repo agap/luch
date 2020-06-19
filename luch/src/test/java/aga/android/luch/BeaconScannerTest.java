@@ -25,7 +25,6 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import static aga.android.luch.ScanDuration.preciseDuration;
-import static aga.android.luch.distance.DistanceCalculatorFactory.getCalculator;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
 import static edu.emory.mathcs.backport.java.util.Collections.emptySet;
@@ -149,7 +148,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -198,7 +197,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -267,7 +266,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -379,6 +378,23 @@ public class BeaconScannerTest {
             emptySet(),
             beaconListener.nearbyBeacons
         );
+    }
+
+    @Test
+    public void testRangingMode() {
+
+        // given
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconBatchListener(beaconListener)
+            .setScanTasksExecutor(executorProvider)
+            .setRangingEnabled(true)
+            .build();
+
+        scanner.start();
+        advanceTimeBy(10_000);
+        scanner.stop();
     }
 
     private ScanResult getScanResult()

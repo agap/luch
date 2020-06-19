@@ -1,13 +1,10 @@
 package aga.android.luch.parsers;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import aga.android.luch.distance.AbstractDistanceCalculator;
-import aga.android.luch.distance.DistanceCalculatorFactory;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -48,10 +45,9 @@ public final class BeaconParserFactory {
         final String[] tokens = beaconLayout.split(",");
 
         int beaconTypeFieldPosition = -1;
+        int beaconTxPowerFieldPosition = -1;
 
         Object beaconType = null;
-
-        AbstractDistanceCalculator distanceCalculator = null;
 
         for (int i = 0; i < tokens.length; i++) {
             final String token = tokens[i];
@@ -81,7 +77,7 @@ public final class BeaconParserFactory {
 
                 beaconTypeFieldPosition = converters.size() - 1;
             } else if (fieldPrefix.equals("p")) {
-                distanceCalculator = DistanceCalculatorFactory.getCalculator(i);
+                beaconTxPowerFieldPosition = i;
             }
         }
 
@@ -93,10 +89,10 @@ public final class BeaconParserFactory {
 
         return new BeaconParser(
             converters,
-            distanceCalculator,
             beaconTypeFieldPosition,
             manufacturerId,
-            beaconType
+            beaconType,
+            beaconTxPowerFieldPosition
         );
     }
 

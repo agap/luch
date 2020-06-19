@@ -9,24 +9,9 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Build
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 
-class BeaconLiveData(application: Application) : LiveData<Collection<Beacon>>() {
-
-    private val batchListener: IBeaconBatchListener = IBeaconBatchListener { beacons ->
-        value = beacons
-    }
-
-    private val scanner: IScanner = BeaconScanner.Builder(application)
-        .setBeaconExpirationDuration(10)
-        .setScanDuration(
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                ScanDuration.preciseDuration(150, 1500)
-            } else {
-                ScanDuration.UNIFORM
-            }
-        )
-        .setBeaconBatchListener(batchListener)
-        .build()
+class BeaconLiveData(private val scanner: IScanner) : MutableLiveData<Collection<Beacon>>() {
 
     // Check is suppressed since permission checks should happen on the Fragment/Activity level,
     // not in the LiveData/ViewModel. See MainActivity.

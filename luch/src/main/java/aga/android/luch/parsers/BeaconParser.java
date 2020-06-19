@@ -14,7 +14,6 @@ import java.util.Locale;
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
 import aga.android.luch.Region;
-import aga.android.luch.distance.AbstractDistanceCalculator;
 
 import static aga.android.luch.parsers.Conversions.asByteArray;
 import static aga.android.luch.parsers.Conversions.byteArrayToHexString;
@@ -26,22 +25,22 @@ final class BeaconParser implements IBeaconParser {
 
     private final Object beaconType;
 
-    private final int beaconTypePosition;
+    private final int beaconTypeIndex;
 
     private final int manufacturerId;
 
-    private final AbstractDistanceCalculator distanceCalculator;
+    private final int txPowerIndex;
 
     BeaconParser(@NonNull List<IFieldConverter<?>> fieldConverters,
-                 @Nullable AbstractDistanceCalculator distanceCalculator,
-                 int beaconTypePosition,
+                 int beaconTypeIndex,
                  int manufacturerId,
-                 Object beaconType) {
+                 Object beaconType,
+                 int txPowerIndex) {
         this.fieldConverters.addAll(fieldConverters);
-        this.distanceCalculator = distanceCalculator;
-        this.beaconTypePosition = beaconTypePosition;
+        this.beaconTypeIndex = beaconTypeIndex;
         this.manufacturerId = manufacturerId;
         this.beaconType = beaconType;
+        this.txPowerIndex = txPowerIndex;
     }
 
     @Override
@@ -69,7 +68,7 @@ final class BeaconParser implements IBeaconParser {
                     final Object parsedField = converter.consume(bytesList);
                     identifiers.add(parsedField);
 
-                    if (j == beaconTypePosition && !beaconType.equals(parsedField)) {
+                    if (j == beaconTypeIndex && !beaconType.equals(parsedField)) {
                         BeaconLogger.e(
                             format(
                                 Locale.US,
@@ -85,15 +84,15 @@ final class BeaconParser implements IBeaconParser {
                     }
                 }
 
-                final Beacon beacon = new Beacon(
+                final Byte txPower = txPowerIndex != -1
+                    ? ((byte) identifiers.get(txPowerIndex))
+                    : null;
+
+                return new Beacon(
                     scanResult.getDevice().getAddress(),
                     identifiers,
-                    distanceCalculator
+                    txPower
                 );
-
-                beacon.setRssi((byte) scanResult.getRssi());
-
-                return beacon;
 
             } catch (Exception e) {
                 BeaconLogger.e(
