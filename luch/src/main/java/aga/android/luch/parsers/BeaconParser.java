@@ -4,9 +4,6 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.util.SparseArray;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -14,6 +11,8 @@ import java.util.Locale;
 import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
 import aga.android.luch.Region;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static aga.android.luch.parsers.Conversions.asByteArray;
 import static aga.android.luch.parsers.Conversions.byteArrayToHexString;
@@ -136,8 +135,27 @@ final class BeaconParser implements IBeaconParser {
     private ScanFilter getScanFilter(@NonNull Region region)
             throws RegionConversionException {
 
-        final List<Byte> mask = getMask(region, MASK_PRODUCER);
-        final List<Byte> filter = getMask(region, FILTER_PRODUCER);
+        final List<Byte> mask = new ArrayList<>();
+        final List<Byte> filter = new ArrayList<>();
+
+        for (int i = 0; i < fieldConverters.size(); i++) {
+            final IFieldConverter<?> parser = fieldConverters.get(i);
+            final Object field = region.getFieldAt(i);
+
+            if (field == null) {
+                parser.insertMask(mask, (byte) 0x00);
+                parser.insertMask(filter, (byte) 0x00);
+            } else if (parser.canParse(field.getClass())) {
+                parser.insertMask(mask, (byte) 0x01);
+                parser.insert(filter, field);
+            } else {
+                throw new RegionConversionException(
+                    "Type mismatch, field parser in position " + i + " has type of "
+                        + IFieldConverter.class + ", while the Region object has an incompatible "
+                        + "field (" + field + ") in the same position. Check the beacon layout."
+                );
+            }
+        }
 
         return new ScanFilter
             .Builder()
@@ -148,83 +166,4 @@ final class BeaconParser implements IBeaconParser {
             )
             .build();
     }
-
-    /**
-     * Creates a beacon advertisement mask to be used in {@link android.bluetooth.le.ScanFilter}
-     * based on the {@link IFieldConverter} it contains
-     *
-     * @param region the region to search for; the existence or absence of certain fields in
-     *               the region will affect the mask
-     * @return byte mask
-     */
-    @NonNull
-    private List<Byte> getMask(@NonNull Region region,
-                               @NonNull ByteProducer byteProducer)
-            throws RegionConversionException {
-
-        final List<Byte> data = new ArrayList<>();
-
-        for (int i = 0; i < fieldConverters.size(); i++) {
-            final IFieldConverter<?> parser = fieldConverters.get(i);
-            final Object field = region.getFieldAt(i);
-
-            byteProducer.produce(data, field, i, parser);
-        }
-
-        return data;
-    }
-
-    private interface ByteProducer {
-
-        void produce(List<Byte> packet,
-                     Object field,
-                     int position,
-                     IFieldConverter<?> parser) throws RegionConversionException;
-    }
-
-    private static final ByteProducer FILTER_PRODUCER = new ByteProducer() {
-        @Override
-        public void produce(List<Byte> packet,
-                            Object field,
-                            int position,
-                            IFieldConverter<?> parser) throws RegionConversionException {
-
-            if (field == null) {
-                parser.insertMask(packet, (byte) 0x00);
-            } else if (parser.canParse(field.getClass())) {
-                parser.insert(packet, field);
-            } else {
-                throw new RegionConversionException(
-                    "Type mismatch, field parser in position " + position + " has type of "
-                        + IFieldConverter.class + ", while the Region object has an incompatible "
-                        + "field (" + field + ") in the same position. Check the beacon layout."
-                );
-            }
-        }
-    };
-
-    private static final ByteProducer MASK_PRODUCER = new ByteProducer() {
-        @Override
-        public void produce(List<Byte> packet,
-                            Object field,
-                            int position,
-                            IFieldConverter<?> parser) throws RegionConversionException {
-
-            final byte maskByte;
-
-            if (field == null) {
-                maskByte = 0x00;
-            } else if (parser.canParse(field.getClass())) {
-                maskByte = 0x01;
-            } else {
-                throw new RegionConversionException(
-                    "Type mismatch, field parser in position " + position + " has type of "
-                        + IFieldConverter.class + ", while the Region object has an incompatible "
-                        + "field (" + field + ") in the same position. Check the beacon layout."
-                );
-            }
-
-            parser.insertMask(packet, maskByte);
-        }
-    };
 }
