@@ -1,11 +1,11 @@
 package aga.android.luch.parsers;
 
+import androidx.annotation.NonNull;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
 
 class UuidFieldConverter implements IFieldConverter<UUID> {
 
@@ -25,12 +25,14 @@ class UuidFieldConverter implements IFieldConverter<UUID> {
     }
 
     @Override
-    public void insert(@NonNull List<Byte> packet, @NonNull UUID value) {
+    public void insert(@NonNull List<Byte> packet, @NonNull Object value) {
+        final UUID uuid = (UUID) value;
+
         ByteBuffer
             .wrap(bytes)
             .order(ByteOrder.BIG_ENDIAN)
-            .putLong(value.getMostSignificantBits())
-            .putLong(value.getLeastSignificantBits());
+            .putLong(uuid.getMostSignificantBits())
+            .putLong(uuid.getLeastSignificantBits());
 
         for (int i = 0; i < UUID_BYTE_SIZE; i++) {
             packet.add(bytes[i]);

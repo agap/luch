@@ -1,8 +1,8 @@
 package aga.android.luch.parsers;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
+
+import java.util.List;
 
 interface IFieldConverter<T> {
 
@@ -26,7 +26,7 @@ interface IFieldConverter<T> {
      * @param packet the list of bytes to append the aforementioned bytes to
      * @param value the value to be converted into a sequence of {@link Byte}s
      */
-    void insert(@NonNull List<Byte> packet, @NonNull T value);
+    void insert(@NonNull List<Byte> packet, @NonNull Object value);
 
     /**
      * Appends the mask bits (either 0 or 1) to the given mask packet. The amount of bytes to be

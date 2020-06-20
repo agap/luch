@@ -4,6 +4,9 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -12,8 +15,6 @@ import aga.android.luch.Beacon;
 import aga.android.luch.BeaconLogger;
 import aga.android.luch.Region;
 import aga.android.luch.distance.AbstractDistanceCalculator;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static aga.android.luch.parsers.Conversions.asByteArray;
 import static aga.android.luch.parsers.Conversions.byteArrayToHexString;
@@ -21,7 +22,7 @@ import static java.lang.String.format;
 
 final class BeaconParser implements IBeaconParser {
 
-    private final List<IFieldConverter> fieldConverters = new ArrayList<>();
+    private final List<IFieldConverter<?>> fieldConverters = new ArrayList<>();
 
     private final Object beaconType;
 
@@ -31,7 +32,7 @@ final class BeaconParser implements IBeaconParser {
 
     private final AbstractDistanceCalculator distanceCalculator;
 
-    BeaconParser(@NonNull List<? extends IFieldConverter> fieldConverters,
+    BeaconParser(@NonNull List<IFieldConverter<?>> fieldConverters,
                  @Nullable AbstractDistanceCalculator distanceCalculator,
                  int beaconTypePosition,
                  int manufacturerId,
@@ -60,13 +61,12 @@ final class BeaconParser implements IBeaconParser {
             final List<Byte> bytesList = Conversions.asList(rawBytes);
 
             try {
-                final List identifiers = new ArrayList();
+                final List<Object> identifiers = new ArrayList<>();
 
                 for (int j = 0; j < fieldConverters.size(); j++) {
-                    final IFieldConverter converter = fieldConverters.get(j);
+                    final IFieldConverter<?> converter = fieldConverters.get(j);
 
                     final Object parsedField = converter.consume(bytesList);
-                    //noinspection unchecked
                     identifiers.add(parsedField);
 
                     if (j == beaconTypePosition && !beaconType.equals(parsedField)) {
@@ -166,7 +166,7 @@ final class BeaconParser implements IBeaconParser {
         final List<Byte> data = new ArrayList<>();
 
         for (int i = 0; i < fieldConverters.size(); i++) {
-            final IFieldConverter parser = fieldConverters.get(i);
+            final IFieldConverter<?> parser = fieldConverters.get(i);
             final Object field = region.getFieldAt(i);
 
             byteProducer.produce(data, field, i, parser);
@@ -180,7 +180,7 @@ final class BeaconParser implements IBeaconParser {
         void produce(List<Byte> packet,
                      Object field,
                      int position,
-                     IFieldConverter parser) throws RegionConversionException;
+                     IFieldConverter<?> parser) throws RegionConversionException;
     }
 
     private static final ByteProducer FILTER_PRODUCER = new ByteProducer() {
@@ -188,12 +188,11 @@ final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldConverter parser) throws RegionConversionException {
+                            IFieldConverter<?> parser) throws RegionConversionException {
 
             if (field == null) {
                 parser.insertMask(packet, (byte) 0x00);
             } else if (parser.canParse(field.getClass())) {
-                //noinspection unchecked
                 parser.insert(packet, field);
             } else {
                 throw new RegionConversionException(
@@ -210,7 +209,7 @@ final class BeaconParser implements IBeaconParser {
         public void produce(List<Byte> packet,
                             Object field,
                             int position,
-                            IFieldConverter parser) throws RegionConversionException {
+                            IFieldConverter<?> parser) throws RegionConversionException {
 
             final byte maskByte;
 
