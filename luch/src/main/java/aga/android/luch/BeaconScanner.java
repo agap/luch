@@ -137,7 +137,7 @@ public final class BeaconScanner implements IScanner {
             final long lastSeenAt = requireNonNull(inMemoryBeacon).getLastSeenAtSystemClock();
 
             if (timeProvider.elapsedRealTimeTimeMillis() - lastSeenAt
-                    > beaconExpirationDurationMillis) {
+                    >= beaconExpirationDurationMillis) {
 
                 iterator.remove();
 
@@ -416,9 +416,10 @@ public final class BeaconScanner implements IScanner {
     private final Runnable rssiReadingsTrimJob = new Runnable() {
         @Override
         public void run() {
-            if (ranger != null) {
-                ranger.trim();
-            }
+            // ranger reference can not be null while we're running this job, since
+            // we only start this job if ranger is non-null. We don't change BeaconScanner's
+            // settings after we create it.
+            requireNonNull(ranger).trim();
         }
     };
 
