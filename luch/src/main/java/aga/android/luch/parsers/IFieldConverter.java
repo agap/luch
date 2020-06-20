@@ -44,7 +44,7 @@ interface IFieldConverter<T> {
      * @param clazz the type to check against
      * @return true if the parser can be used to parse the value having that type, false otherwise
      */
-    boolean canParse(@NonNull Class clazz);
+    boolean canParse(@NonNull Class<?> clazz);
 
     /**
      * Used to check if the parser will be able to parse the required number of bytes as the value

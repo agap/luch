@@ -27,7 +27,7 @@ class IntegerFieldConverter implements IFieldConverter<Integer> {
     }
 
     @Override
-    public boolean canParse(@NonNull Class clazz) {
+    public boolean canParse(@NonNull Class<?> clazz) {
         return Integer.class.isAssignableFrom(clazz);
     }
 
