@@ -1,19 +1,18 @@
 package aga.android.luch;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
 
 import static java.lang.String.format;
 
 public class Region {
 
-    private List regionFields = new ArrayList();
+    private List<Object> regionFields = new ArrayList<>();
 
-    private Region(@NonNull List regionFields) {
-        //noinspection unchecked
+    private Region(@NonNull List<Object> regionFields) {
         this.regionFields.addAll(regionFields);
     }
 
@@ -28,14 +27,13 @@ public class Region {
     @SuppressWarnings("WeakerAccess")
     public static class Builder {
 
-        private List regionFields = new ArrayList();
+        private List<Object> regionFields = new ArrayList<>();
 
         public Builder() {
 
         }
 
         public Builder addNullField() {
-            //noinspection unchecked
             regionFields.add(null);
             return this;
         }
@@ -49,19 +47,17 @@ public class Region {
                     )
                 );
             }
-            //noinspection unchecked
+
             regionFields.add(field);
             return this;
         }
 
         public Builder addUuidField(@NonNull UUID field) {
-            //noinspection unchecked
             regionFields.add(field);
             return this;
         }
 
         public Builder addByteField(byte field) {
-            //noinspection unchecked
             regionFields.add(field);
             return this;
         }

@@ -1,8 +1,8 @@
 package aga.android.luch.parsers;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
+
+import java.util.List;
 
 class IntegerFieldConverter implements IFieldConverter<Integer> {
 
@@ -15,9 +15,9 @@ class IntegerFieldConverter implements IFieldConverter<Integer> {
     }
 
     @Override
-    public void insert(@NonNull List<Byte> packet, @NonNull Integer value) {
-        packet.add((byte) (value / 256));
-        packet.add((byte) (value / 256));
+    public void insert(@NonNull List<Byte> packet, @NonNull Object value) {
+        packet.add((byte) (((int) value) / 256));
+        packet.add((byte) (((int) value) / 256));
     }
 
     @Override

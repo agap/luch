@@ -1,8 +1,8 @@
 package aga.android.luch.parsers;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
+
+import java.util.List;
 
 class SingleByteFieldConverter implements IFieldConverter<Byte> {
 
@@ -12,8 +12,8 @@ class SingleByteFieldConverter implements IFieldConverter<Byte> {
     }
 
     @Override
-    public void insert(@NonNull List<Byte> packet, @NonNull Byte value) {
-        packet.add(value);
+    public void insert(@NonNull List<Byte> packet, @NonNull Object value) {
+        packet.add(((byte) value));
     }
 
     @Override
