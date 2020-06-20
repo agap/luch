@@ -53,7 +53,8 @@ class MainActivity : AppCompatActivity() {
                     minor = it.getIdentifierAsInt(3),
                     rssi = it.rssi.toInt(),
                     hardwareAddress = it.hardwareAddress,
-                    distance = it.distance
+                    // todo perfect example of Demeter's Law violation
+                    distance = model.scanner.ranger.calculateDistance(it)
                 )
             })
         }

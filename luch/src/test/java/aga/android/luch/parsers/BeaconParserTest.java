@@ -130,7 +130,6 @@ public class BeaconParserTest {
         assertEquals(minor, beacon.getIdentifierAsInt(3));
         assertEquals(txPower, beacon.getIdentifierAsByte(4));
         assertEquals(data, beacon.getIdentifierAsByte(5));
-        assertEquals(rssi, beacon.getRssi());
     }
 
     @Test

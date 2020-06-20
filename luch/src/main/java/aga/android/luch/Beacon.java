@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import aga.android.luch.distance.AbstractDistanceCalculator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -14,21 +13,21 @@ public class Beacon {
     private final String hardwareAddress;
 
     @NonNull
-    private final List beaconIdentifiers;
-
-    @Nullable
-    private final AbstractDistanceCalculator distanceCalculator;
+    private final List<?> beaconIdentifiers;
 
     private byte rssi;
+
+    @Nullable
+    private Byte txPower;
 
     private long lastSeenAtSystemClock;
 
     public Beacon(@NonNull String hardwareAddress,
-                  @NonNull List beaconIdentifiers,
-                  @Nullable AbstractDistanceCalculator distanceCalculator) {
+                  @NonNull List<?> beaconIdentifiers,
+                  @Nullable Byte txPower) {
         this.hardwareAddress = hardwareAddress;
         this.beaconIdentifiers = beaconIdentifiers;
-        this.distanceCalculator = distanceCalculator;
+        this.txPower = txPower;
     }
 
     @Nullable
@@ -41,7 +40,7 @@ public class Beacon {
     }
 
     public byte getIdentifierAsByte(int index) {
-        return (byte) beaconIdentifiers.get(index);
+        return (Byte) beaconIdentifiers.get(index);
     }
 
     public byte getRssi() {
@@ -53,12 +52,9 @@ public class Beacon {
         this.rssi = rssi;
     }
 
-    public double getDistance() {
-        if (distanceCalculator == null) {
-            return Double.MAX_VALUE;
-        } else {
-            return distanceCalculator.getDistance(this);
-        }
+    @Nullable
+    public Byte getTxPower() {
+        return txPower;
     }
 
     @NonNull

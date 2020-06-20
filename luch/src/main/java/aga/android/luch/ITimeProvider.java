@@ -2,7 +2,7 @@ package aga.android.luch;
 
 import android.os.SystemClock;
 
-interface ITimeProvider {
+public interface ITimeProvider {
 
     long elapsedRealTimeTimeMillis();
 
@@ -16,7 +16,7 @@ interface ITimeProvider {
 
     class TestTimeProvider implements ITimeProvider {
 
-        long elapsedRealTimeMillis = 0L;
+        public long elapsedRealTimeMillis = 0L;
 
         @Override
         public long elapsedRealTimeTimeMillis() {

@@ -16,16 +16,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import aga.android.luch.ITimeProvider.TestTimeProvider;
+import aga.android.luch.distance.Ranger;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import static aga.android.luch.ScanDuration.preciseDuration;
-import static aga.android.luch.distance.DistanceCalculatorFactory.getCalculator;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
 import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
 import static edu.emory.mathcs.backport.java.util.Collections.emptySet;
@@ -149,7 +150,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -198,7 +199,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -267,7 +268,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -381,7 +382,68 @@ public class BeaconScannerTest {
         );
     }
 
+    @Test
+    public void testRangingMode()
+        throws NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException,
+            InvocationTargetException {
+
+        // given
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconExpirationDuration(15)
+            .setBeaconBatchListener(beaconListener)
+            .setScanTasksExecutor(executorProvider)
+            .setTimeProvider(timeProvider)
+            .setRangingEnabled(true)
+            .build();
+
+        final Ranger ranger = scanner.getRanger();
+
+        // when
+        scanner.start();
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -95));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -97));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -99));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -90));
+        advanceTimeBy(100);
+
+        // then
+        // Stage 1 - Ranger has RSSI readings, hence it's running distance calculation
+        // over the smoothed RSSI value
+        final Beacon beacon = beaconListener.nearbyBeacons.iterator().next();
+        assertEquals(0.3162, Objects.requireNonNull(ranger).calculateDistance(beacon), 0.0001);
+
+        // when
+        advanceTimeBy(15_000);
+
+        // then
+        // Stage 2 - 15 seconds have passed, RSSI values were cleaned up, distance calculation
+        // is done over the latest known RSSI value
+        assertEquals(0.1778, ranger.calculateDistance(beacon), 0.0001);
+
+        scanner.stop();
+    }
+
     private ScanResult getScanResult()
+        throws NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException,
+            InvocationTargetException {
+        return getScanResult(rssi);
+    }
+
+    private ScanResult getScanResult(byte rssi)
         throws InvocationTargetException,
             NoSuchMethodException,
             InstantiationException,
