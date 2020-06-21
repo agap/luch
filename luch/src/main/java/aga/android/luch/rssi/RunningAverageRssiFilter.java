@@ -1,4 +1,4 @@
-package aga.android.luch.distance;
+package aga.android.luch.rssi;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,6 +7,7 @@ import java.util.List;
 import aga.android.luch.ITimeProvider;
 import aga.android.luch.ITimeProvider.SystemTimeProvider;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 public final class RunningAverageRssiFilter extends RssiFilter {
 
@@ -69,18 +70,19 @@ public final class RunningAverageRssiFilter extends RssiFilter {
 
         }
 
-        Builder addRssiValidityPeriodMillis(long rssiValidity) {
+        public Builder addRssiValidityPeriodMillis(long rssiValidity) {
             this.rssiValidity = rssiValidity;
             return this;
         }
 
-        Builder addTimeProvider(ITimeProvider timeProvider) {
+        @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+        public Builder addTimeProvider(ITimeProvider timeProvider) {
             this.timeProvider = timeProvider;
             return this;
         }
 
         @Override
-        RssiFilter build() {
+        public RssiFilter build() {
             return new RunningAverageRssiFilter(timeProvider, rssiValidity);
         }
     }

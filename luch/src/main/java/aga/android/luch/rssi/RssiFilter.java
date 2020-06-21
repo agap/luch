@@ -1,4 +1,4 @@
-package aga.android.luch.distance;
+package aga.android.luch.rssi;
 
 import androidx.annotation.Nullable;
 
@@ -8,13 +8,13 @@ public abstract class RssiFilter {
 
     }
 
-    abstract void addReading(byte rssi);
+    public abstract void addReading(byte rssi);
 
     @Nullable
-    abstract Byte getFilteredValue();
+    public abstract Byte getFilteredValue();
 
     public abstract static class Builder {
 
-        abstract RssiFilter build();
+        public abstract RssiFilter build();
     }
 }

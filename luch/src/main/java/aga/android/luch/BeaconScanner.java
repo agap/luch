@@ -18,9 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import aga.android.luch.distance.Ranger;
-import aga.android.luch.distance.RssiFilter;
-import aga.android.luch.distance.RunningAverageRssiFilter;
+import aga.android.luch.rssi.RssiFilter;
+import aga.android.luch.rssi.RunningAverageRssiFilter;
 import aga.android.luch.parsers.BeaconParserFactory;
 import aga.android.luch.parsers.IBeaconParser;
 import androidx.annotation.IntRange;

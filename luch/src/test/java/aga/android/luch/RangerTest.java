@@ -1,9 +1,10 @@
-package aga.android.luch.distance;
+package aga.android.luch;
 
 import org.junit.Test;
 
-import aga.android.luch.Beacon;
 import aga.android.luch.ITimeProvider.TestTimeProvider;
+import aga.android.luch.rssi.RssiFilter;
+import aga.android.luch.rssi.RunningAverageRssiFilter;
 
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
@@ -12,8 +13,7 @@ public class RangerTest {
 
     private final TestTimeProvider timeProvider = new TestTimeProvider();
 
-    private final RssiFilter.Builder testFilter = new RunningAverageRssiFilter
-        .Builder()
+    private final RssiFilter.Builder testFilter = new RunningAverageRssiFilter.Builder()
         .addTimeProvider(timeProvider);
 
     @Test

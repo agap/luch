@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 public class Beacon {
 
@@ -47,8 +48,8 @@ public class Beacon {
         return rssi;
     }
 
-    // todo should it really be public?
-    public void setRssi(byte rssi) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+    void setRssi(byte rssi) {
         this.rssi = rssi;
     }
 

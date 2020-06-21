@@ -10,7 +10,6 @@ import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 
 class BeaconsViewModel(application: Application) : AndroidViewModel(application) {
 

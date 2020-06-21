@@ -1,8 +1,8 @@
-package aga.android.luch.distance;
+package aga.android.luch.rssi;
 
 import androidx.annotation.Nullable;
 
-public class ArmaFilter extends RssiFilter {
+public final class ArmaFilter extends RssiFilter {
 
     private final float armaSpeed;
 
@@ -13,7 +13,7 @@ public class ArmaFilter extends RssiFilter {
     }
 
     @Override
-    void addReading(byte rssi) {
+    public void addReading(byte rssi) {
         if (filteredRssi == null) {
             filteredRssi = rssi;
         } else {
@@ -23,7 +23,7 @@ public class ArmaFilter extends RssiFilter {
 
     @Nullable
     @Override
-    Byte getFilteredValue() {
+    public Byte getFilteredValue() {
         return filteredRssi;
     }
 
@@ -43,7 +43,7 @@ public class ArmaFilter extends RssiFilter {
         }
 
         @Override
-        RssiFilter build() {
+        public RssiFilter build() {
             return new ArmaFilter(armaSpeed);
         }
     }
