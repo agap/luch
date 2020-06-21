@@ -170,9 +170,7 @@ public final class BeaconScanner implements IScanner {
 
         private ITimeProvider timeProvider = new ITimeProvider.SystemTimeProvider();
 
-        private boolean rangingEnabled = false;
-
-        private RssiFilter.Builder rssiFilterBuilder = new RunningAverageRssiFilter.Builder();
+        private RssiFilter.Builder rssiFilterBuilder = null;
 
         private final Context context;
 
@@ -255,12 +253,21 @@ public final class BeaconScanner implements IScanner {
         /**
          * Enables distance calculation for detected beacons. Use {@link BeaconScanner#getRanger()}
          * to get access to the distance calculator
-         * @param enabled whether or not the distance calculation should be enabled,
-         *                default value is false
          * @return this object
          */
-        public Builder setRangingEnabled(boolean enabled) {
-            this.rangingEnabled = enabled;
+        public Builder setRangingEnabled() {
+            return setRangingEnabled(new RunningAverageRssiFilter.Builder());
+        }
+
+        /**
+         * Enables distance calculation for detected beacons. Use {@link BeaconScanner#getRanger()}
+         * to get access to the distance calculator
+         * @param rssiFilterBuilder RSSI filter to be used for RSSI averaging, default filter is
+         *                          {@link RunningAverageRssiFilter}
+         * @return this object
+         */
+        public Builder setRangingEnabled(@NonNull RssiFilter.Builder rssiFilterBuilder) {
+            this.rssiFilterBuilder = rssiFilterBuilder;
             return this;
         }
 
@@ -312,7 +319,7 @@ public final class BeaconScanner implements IScanner {
 
             Ranger ranger = null;
 
-            if (rangingEnabled) {
+            if (rssiFilterBuilder != null) {
                 ranger = new Ranger(rssiFilterBuilder);
             }
 
