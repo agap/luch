@@ -12,13 +12,15 @@ public class RangerTest {
 
     private final TestTimeProvider timeProvider = new TestTimeProvider();
 
-    private final IRssiFilter testFilter = new RunningAverageRssiFilter();
+    private final RssiFilter.Builder testFilter = new RunningAverageRssiFilter
+        .Builder()
+        .addTimeProvider(timeProvider);
 
     @Test
     public void testRangeCalculationWithEmptyCacheAndSameTxPowerAndRssi() {
 
         // given
-        final Ranger ranger = new Ranger(timeProvider, testFilter);
+        final Ranger ranger = new Ranger(testFilter);
         final Beacon beacon = new Beacon("00:11:22:33:44:EE", emptyList(), (byte) -95);
         beacon.setRssi((byte) -95);
 
@@ -33,7 +35,7 @@ public class RangerTest {
     public void testRangeCalculationWithEmptyCacheAndTxPowerGreaterThanRssi() {
 
         // given
-        final Ranger ranger = new Ranger(timeProvider, testFilter);
+        final Ranger ranger = new Ranger(testFilter);
         final Beacon beacon = new Beacon("00:11:22:33:44:EE", emptyList(), (byte) -85);
         beacon.setRssi((byte) -95);
 
@@ -48,7 +50,7 @@ public class RangerTest {
     public void testRangeCalculationWithEmptyCacheAndTxPowerSmallerThanRssi() {
 
         // given
-        final Ranger ranger = new Ranger(timeProvider, testFilter);
+        final Ranger ranger = new Ranger(testFilter);
         final Beacon beacon = new Beacon("00:11:22:33:44:EE", emptyList(), (byte) -95);
         beacon.setRssi((byte) -85);
 
@@ -63,7 +65,7 @@ public class RangerTest {
     public void testRangeCalculationWithNonEmptyCache() {
 
         // given
-        final Ranger ranger = new Ranger(timeProvider, testFilter);
+        final Ranger ranger = new Ranger(testFilter);
         final Beacon beacon = new Beacon("00:11:22:33:44:EE", emptyList(), (byte) -95);
         beacon.setRssi((byte) -95);
 
@@ -82,7 +84,7 @@ public class RangerTest {
     @Test
     public void testRangeCalculationOfBeaconWithNoTxPower() {
         // given
-        final Ranger ranger = new Ranger(timeProvider, testFilter);
+        final Ranger ranger = new Ranger(testFilter);
         final Beacon beacon = new Beacon("00:11:22:33:44:EE", emptyList(), null);
         beacon.setRssi((byte) -85);
 

@@ -27,7 +27,7 @@ class BeaconsViewModel(application: Application) : AndroidViewModel(application)
                 ScanDuration.UNIFORM
             }
         )
-        .setRangingEnabled(true)
+        .setRangingEnabled()
         .setBeaconBatchListener(batchListener)
         .build()
 

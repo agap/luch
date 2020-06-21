@@ -397,7 +397,7 @@ public class BeaconScannerTest {
             .setBeaconBatchListener(beaconListener)
             .setScanTasksExecutor(executorProvider)
             .setTimeProvider(timeProvider)
-            .setRangingEnabled(true)
+            .setRangingEnabled()
             .build();
 
         final Ranger ranger = scanner.getRanger();

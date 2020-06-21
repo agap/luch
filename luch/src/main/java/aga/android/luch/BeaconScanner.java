@@ -19,6 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import aga.android.luch.distance.Ranger;
+import aga.android.luch.distance.RssiFilter;
 import aga.android.luch.distance.RunningAverageRssiFilter;
 import aga.android.luch.parsers.BeaconParserFactory;
 import aga.android.luch.parsers.IBeaconParser;
@@ -33,7 +34,6 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 public final class BeaconScanner implements IScanner {
 
     private static final long BEACON_EVICTION_PERIODICITY_MILLIS = 1_000;
-    private static final long RSSI_READINGS_TRIM_PERIODICITY_MILLIS = 1_000;
 
     @NonNull
     private IBleDevice bleDevice;
@@ -103,15 +103,6 @@ public final class BeaconScanner implements IScanner {
             BEACON_EVICTION_PERIODICITY_MILLIS,
             TimeUnit.MILLISECONDS
         );
-
-        if (ranger != null) {
-            scheduledExecutor.scheduleAtFixedRate(
-                rssiReadingsTrimJob,
-                scanDuration.scanDurationMillis,
-                RSSI_READINGS_TRIM_PERIODICITY_MILLIS,
-                TimeUnit.MILLISECONDS
-            );
-        }
     }
 
     @Override
@@ -179,7 +170,7 @@ public final class BeaconScanner implements IScanner {
 
         private ITimeProvider timeProvider = new ITimeProvider.SystemTimeProvider();
 
-        private boolean rangingEnabled = false;
+        private RssiFilter.Builder rssiFilterBuilder = null;
 
         private final Context context;
 
@@ -262,12 +253,21 @@ public final class BeaconScanner implements IScanner {
         /**
          * Enables distance calculation for detected beacons. Use {@link BeaconScanner#getRanger()}
          * to get access to the distance calculator
-         * @param enabled whether or not the distance calculation should be enabled,
-         *                default value is false
          * @return this object
          */
-        public Builder setRangingEnabled(boolean enabled) {
-            this.rangingEnabled = enabled;
+        public Builder setRangingEnabled() {
+            return setRangingEnabled(new RunningAverageRssiFilter.Builder());
+        }
+
+        /**
+         * Enables distance calculation for detected beacons. Use {@link BeaconScanner#getRanger()}
+         * to get access to the distance calculator
+         * @param rssiFilterBuilder RSSI filter to be used for RSSI averaging, default filter is
+         *                          {@link RunningAverageRssiFilter}
+         * @return this object
+         */
+        public Builder setRangingEnabled(@NonNull RssiFilter.Builder rssiFilterBuilder) {
+            this.rssiFilterBuilder = rssiFilterBuilder;
             return this;
         }
 
@@ -319,11 +319,8 @@ public final class BeaconScanner implements IScanner {
 
             Ranger ranger = null;
 
-            if (rangingEnabled) {
-                ranger = new Ranger(
-                    timeProvider,
-                    new RunningAverageRssiFilter()
-                );
+            if (rssiFilterBuilder != null) {
+                ranger = new Ranger(rssiFilterBuilder);
             }
 
             final BeaconScanner scanner = new BeaconScanner(
@@ -410,16 +407,6 @@ public final class BeaconScanner implements IScanner {
             evictOutdatedBeacons();
 
             BeaconLogger.d("Beacons eviction completed");
-        }
-    };
-
-    private final Runnable rssiReadingsTrimJob = new Runnable() {
-        @Override
-        public void run() {
-            // ranger reference can not be null while we're running this job, since
-            // we only start this job if ranger is non-null. We don't change BeaconScanner's
-            // settings after we create it.
-            requireNonNull(ranger).trim();
         }
     };
 

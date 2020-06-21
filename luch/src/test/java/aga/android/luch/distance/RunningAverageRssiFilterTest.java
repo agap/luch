@@ -2,29 +2,75 @@ package aga.android.luch.distance;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import aga.android.luch.ITimeProvider;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class RunningAverageRssiFilterTest {
 
     @Test
-    public void testRunningAverageCalculation() {
+    public void testRunningAverageWithNoHistoryCalculation() {
 
         // given
-        final List<Reading> readings = Arrays.asList(
-            new Reading((byte) -95, 100_000_000),
-            new Reading((byte) -98, 100_000_100),
-            new Reading((byte) -100, 100_000_200)
-        );
+        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
 
-        final IRssiFilter filter = new RunningAverageRssiFilter();
+        final RssiFilter filter = new RunningAverageRssiFilter.Builder()
+            .addTimeProvider(timeProvider)
+            .build();
 
         // when
-        final byte average = filter.getFilteredValue(readings);
+        final Byte average = filter.getFilteredValue();
 
         // then
-        assertEquals(-97, average);
+        assertNull(average);
+    }
+
+    @Test
+    public void testRunningAverageCalculationWithData() {
+
+        // given
+        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
+
+        final RssiFilter filter = new RunningAverageRssiFilter.Builder()
+            .addRssiValidityPeriodMillis(1_000)
+            .addTimeProvider(timeProvider)
+            .build();
+
+        // when
+        filter.addReading((byte) -95);
+        filter.addReading((byte) -98);
+        filter.addReading((byte) -100);
+
+        final Byte average = filter.getFilteredValue();
+
+        // then
+        assertEquals(Byte.valueOf((byte) -97), average);
+    }
+
+    @Test
+    public void testRunningAverageCalculationOnOutdatedDataReturnsNull() {
+        // given
+        final ITimeProvider.TestTimeProvider timeProvider = new ITimeProvider.TestTimeProvider();
+
+        final RssiFilter filter = new RunningAverageRssiFilter.Builder()
+            .addRssiValidityPeriodMillis(1_000)
+            .addTimeProvider(timeProvider)
+            .build();
+
+        // when
+        filter.addReading((byte) -95);
+        filter.addReading((byte) -98);
+        filter.addReading((byte) -100);
+
+        // then
+        assertEquals(Byte.valueOf((byte) -97), filter.getFilteredValue());
+
+        // when
+        timeProvider.elapsedRealTimeMillis = 2_000;
+        filter.addReading((byte) -120);
+
+        // then
+        assertEquals(Byte.valueOf((byte) -120), filter.getFilteredValue());
     }
 }
