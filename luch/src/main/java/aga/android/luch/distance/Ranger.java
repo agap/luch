@@ -1,43 +1,46 @@
 package aga.android.luch.distance;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import aga.android.luch.Beacon;
-import aga.android.luch.ITimeProvider;
 import androidx.annotation.NonNull;
 
 import static java.lang.Math.pow;
 
 public final class Ranger {
 
-    private final IRssiFilter rssiFilter;
+    private final RssiFilter.Builder rssiFilterBuilder;
 
-    private final ReadingsCache cache;
+    private final Map<Beacon, RssiFilter> cache = new ConcurrentHashMap<>();
 
-    public Ranger(ITimeProvider timeProvider,
-                  IRssiFilter rssiFilter) {
-        this(new ReadingsCache(timeProvider), rssiFilter);
-    }
-
-    Ranger(ReadingsCache readingsCache,
-           IRssiFilter rssiFilter) {
-        this.cache = readingsCache;
-        this.rssiFilter = rssiFilter;
+    public Ranger(RssiFilter.Builder rssiFilterBuilder) {
+        this.rssiFilterBuilder = rssiFilterBuilder;
     }
 
     /**
      *  Simple distance calculator based on the paper called "Evaluation of the Reliability of RSSI
      *  for Indoor Localization".
      *  See here: https://www.rn.inf.tu-dresden.de/dargie/papers/icwcuca.pdf
-     * @param beacon
+     * @param beacon the beacon to range
      * @return calculated distance
      */
     public double calculateDistance(@NonNull Beacon beacon) {
-        final List<Reading> beaconReadings = cache.getReadingsOf(beacon);
+        final RssiFilter filter = cache.get(beacon);
 
-        final byte rssi = beaconReadings.isEmpty()
-            ? beacon.getRssi()
-            : rssiFilter.getFilteredValue(beaconReadings);
+        final byte rssi;
+
+        if (filter != null) {
+            final Byte filteredRssi = filter.getFilteredValue();
+
+            if (filteredRssi == null) {
+                rssi = beacon.getRssi();
+            } else {
+                rssi = filteredRssi;
+            }
+        } else {
+            rssi = beacon.getRssi();
+        }
 
         final Byte txPower = beacon.getTxPower();
 
@@ -47,14 +50,17 @@ public final class Ranger {
     }
 
     public void addReading(@NonNull Beacon beacon, byte rssi) {
-        cache.add(beacon, rssi);
+        RssiFilter filter = cache.get(beacon);
+
+        if (filter == null) {
+            filter = rssiFilterBuilder.build();
+            cache.put(beacon, filter);
+        }
+
+        filter.addReading(rssi);
     }
 
     public void removeReadings(@NonNull Beacon beacon) {
         cache.remove(beacon);
-    }
-
-    public void trim() {
-        cache.trim();
     }
 }
