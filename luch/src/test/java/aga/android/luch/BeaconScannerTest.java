@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import aga.android.luch.ITimeProvider.TestTimeProvider;
-import aga.android.luch.distance.Ranger;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;

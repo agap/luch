@@ -1,9 +1,9 @@
-package aga.android.luch.distance;
+package aga.android.luch;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import aga.android.luch.Beacon;
+import aga.android.luch.rssi.RssiFilter;
 import androidx.annotation.NonNull;
 
 import static java.lang.Math.pow;
@@ -14,7 +14,7 @@ public final class Ranger {
 
     private final Map<Beacon, RssiFilter> cache = new ConcurrentHashMap<>();
 
-    public Ranger(RssiFilter.Builder rssiFilterBuilder) {
+    Ranger(RssiFilter.Builder rssiFilterBuilder) {
         this.rssiFilterBuilder = rssiFilterBuilder;
     }
 
@@ -49,7 +49,7 @@ public final class Ranger {
             : Double.MAX_VALUE;
     }
 
-    public void addReading(@NonNull Beacon beacon, byte rssi) {
+    void addReading(@NonNull Beacon beacon, byte rssi) {
         RssiFilter filter = cache.get(beacon);
 
         if (filter == null) {
@@ -60,7 +60,7 @@ public final class Ranger {
         filter.addReading(rssi);
     }
 
-    public void removeReadings(@NonNull Beacon beacon) {
+    void removeReadings(@NonNull Beacon beacon) {
         cache.remove(beacon);
     }
 }

@@ -1,4 +1,4 @@
-package aga.android.luch.distance;
+package aga.android.luch.rssi;
 
 import org.junit.Test;
 

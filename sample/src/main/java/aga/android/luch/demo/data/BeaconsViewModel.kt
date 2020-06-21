@@ -4,7 +4,9 @@ import aga.android.luch.Beacon
 import aga.android.luch.BeaconScanner
 import aga.android.luch.IBeaconBatchListener
 import aga.android.luch.IScanner
+import aga.android.luch.ITimeProvider
 import aga.android.luch.ScanDuration
+import aga.android.luch.rssi.RunningAverageRssiFilter
 import android.app.Application
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel

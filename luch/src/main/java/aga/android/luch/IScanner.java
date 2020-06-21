@@ -2,7 +2,6 @@ package aga.android.luch;
 
 import android.Manifest.permission;
 
-import aga.android.luch.distance.Ranger;
 import androidx.annotation.RequiresPermission;
 
 public interface IScanner {
