@@ -58,7 +58,7 @@ public final class RunningAverageRssiFilter extends RssiFilter {
 
     public static final class Builder extends RssiFilter.Builder {
 
-        private static final long DEFAULT_RSSI_VALIDITY_PERIOD_MILLIS = 5_000;
+        private static final long DEFAULT_RSSI_VALIDITY_PERIOD_MILLIS = 20_000;
         private static final ITimeProvider DEFAULT_TIME_PROVIDER = new SystemTimeProvider();
 
         private long rssiValidity = DEFAULT_RSSI_VALIDITY_PERIOD_MILLIS;
