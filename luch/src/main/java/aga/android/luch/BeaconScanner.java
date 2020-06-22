@@ -432,7 +432,7 @@ public final class BeaconScanner implements IScanner {
             final long elapsedRealTimeTimeMillis = timeProvider.elapsedRealTimeTimeMillis();
 
             if (inMemoryBeacon != null) {
-                updateBeaconTransientValues(inMemoryBeacon, elapsedRealTimeTimeMillis);
+                handleInMemoryBeacon(inMemoryBeacon, elapsedRealTimeTimeMillis);
             } else {
                 final Beacon parsedBeacon = beaconParser.parse(scanResult);
 
@@ -440,23 +440,47 @@ public final class BeaconScanner implements IScanner {
                     return;
                 }
 
-                updateBeaconTransientValues(parsedBeacon, elapsedRealTimeTimeMillis);
-
-                nearbyBeacons.put(Arrays.hashCode(rawBytes), parsedBeacon);
-
-                if (beaconListener != null) {
-                    uiHandler.post(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                beaconListener.onBeaconEntered(parsedBeacon);
-                            }
-                        }
-                    );
-                }
+                handleScannedBeacon(rawBytes, elapsedRealTimeTimeMillis, parsedBeacon);
             }
 
             uiHandler.post(deliverBeaconBatchJob);
+        }
+
+        private void handleScannedBeacon(byte[] rawBytes,
+                                         long elapsedRealTimeTimeMillis,
+                                         final Beacon parsedBeacon) {
+
+            updateBeaconTransientValues(parsedBeacon, elapsedRealTimeTimeMillis);
+
+            nearbyBeacons.put(Arrays.hashCode(rawBytes), parsedBeacon);
+
+            if (beaconListener != null) {
+                uiHandler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            beaconListener.onBeaconEntered(parsedBeacon);
+                        }
+                    }
+                );
+            }
+        }
+
+        private void handleInMemoryBeacon(final Beacon inMemoryBeacon,
+                                          long elapsedRealTimeTimeMillis) {
+
+            updateBeaconTransientValues(inMemoryBeacon, elapsedRealTimeTimeMillis);
+
+            if (beaconListener != null) {
+                uiHandler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            beaconListener.onBeaconUpdated(inMemoryBeacon);
+                        }
+                    }
+                );
+            }
         }
 
         private void updateBeaconTransientValues(Beacon inMemoryBeacon,
