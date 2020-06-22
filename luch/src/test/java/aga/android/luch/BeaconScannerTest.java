@@ -517,6 +517,11 @@ public class BeaconScannerTest {
         }
 
         @Override
+        public void onBeaconUpdated(@NonNull Beacon beacon) {
+
+        }
+
+        @Override
         public void onBeaconExited(@NonNull Beacon beacon) {
             nearbyBeacons.remove(beacon);
         }
