@@ -28,8 +28,8 @@ implementation 'aga.android:luch:(insert latest version)'
 ## Obtain an instance of the BeaconScanner
 
 ```kotlin
-val beaconScanner = BeaconScanner.Builder()
-    .setBeaconListener { beacons: Set<Beacon> ->
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .build()
@@ -58,7 +58,7 @@ If you want to monitor specific beacons, you can provide a list of regions to lo
 ```kotlin
 val regions = listOf(Region.Builder().build())
 
-val beaconScanner = BeaconScanner.Builder()
+val beaconScanner = BeaconScanner.Builder(this)
     .setRegions(regions)
     .build()
 ```
@@ -111,9 +111,9 @@ val beaconLayout = "<beacon-layout>" // search the Internet to find the layout s
 
 val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
 
-val beaconScanner = BeaconScanner.Builder()
+val beaconScanner = BeaconScanner.Builder(this)
     .setBeaconParser(beaconParser)
-    .setBeaconListener { beacons: Set<Beacon> ->
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .build()
@@ -129,8 +129,8 @@ The format of beacon layouts is somewhat similar to the one supported by [AltBea
 You can range your beacons if you want to. To do that, build your `BeaconScanner` with ranging support:
 
 ```kotlin
-val beaconScanner = BeaconScanner.Builder()
-    .setBeaconListener { beacons: Set<Beacon> ->
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .setRangingEnabled()
@@ -151,8 +151,8 @@ The ranging works only for the beacons that provide the TxPower value in their a
 Due to the nature of BLE, RSSI values can suddenly change. To smooth these sudden changes, Luch uses the RSSI filtering technique. The default filter is [running average](https://en.wikipedia.org/wiki/Moving_average) filter, but you can replace it with [ARMA](https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model) (autoregressive–moving-average filter):
 
 ```kotlin
-val beaconScanner = BeaconScanner.Builder()
-    .setBeaconListener { beacons: Set<Beacon> ->
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .setRangingEnabled(
