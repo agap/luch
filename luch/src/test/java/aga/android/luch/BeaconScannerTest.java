@@ -228,6 +228,66 @@ public class BeaconScannerTest {
     }
 
     @Test
+    public void testScannerRemovesAllBeaconsOnStop()
+        throws InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException {
+        // given
+        final long beaconExpirationDurationSeconds = 10;
+        final long scanRestDurationSeconds = 6;
+
+        final ScanDuration scanDuration = preciseDuration(
+            SECONDS.toMillis(scanRestDurationSeconds),
+            SECONDS.toMillis(scanRestDurationSeconds)
+        );
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconBatchListener(beaconListener)
+            .setBeaconExpirationDuration(beaconExpirationDurationSeconds)
+            .setScanDuration(scanDuration)
+            .setTimeProvider(timeProvider)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+
+        final ScanResult scanResult = getScanResult();
+
+        // when
+        scanner.start();
+
+        advanceTimeBy(10);
+        bleDevice.transmitScanResult(scanResult);
+        advanceTimeBy(20);
+
+        // then
+        // Stage 1 - beacon is delivered
+        assertEquals(
+            singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, txPower, data),
+                    txPower
+                )
+            ),
+            beaconListener.nearbyBeacons
+        );
+
+        // when
+        scanner.stop();
+        advanceTimeBy(10);
+
+        // then
+        // Stage 2 - beacons are removed
+        assertEquals(
+            emptySet(),
+            beaconListener.nearbyBeacons
+        );
+    }
+
+    @Test
     public void testScannerInvokesEnterExitCallbacks()
         throws NoSuchMethodException,
             InstantiationException,
