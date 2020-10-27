@@ -70,6 +70,25 @@ public final class BeaconScanner implements IScanner {
     @NonNull
     private final ScanDuration scanDuration;
 
+    @NonNull
+    private final BeaconEvictionPredicate defaultPredicate = new BeaconEvictionPredicate() {
+        @Override
+        public boolean canBeEvicted(@NonNull Beacon beacon) {
+            return true;
+        }
+    };
+
+    @NonNull
+    private final BeaconEvictionPredicate outdatedBeaconPredicate = new BeaconEvictionPredicate() {
+        @Override
+        public boolean canBeEvicted(@NonNull Beacon beacon) {
+            final long lastSeenAt = requireNonNull(beacon).getLastSeenAtSystemClock();
+
+            return timeProvider.elapsedRealTimeTimeMillis() - lastSeenAt
+                >= beaconExpirationDurationMillis;
+        }
+    };
+
     private long beaconExpirationDurationMillis;
 
     private BeaconScanner(@NonNull IBleDevice bleDevice,
@@ -97,7 +116,7 @@ public final class BeaconScanner implements IScanner {
         );
 
         scheduledExecutor.scheduleAtFixedRate(
-            beaconsEvictionJob,
+            periodicBeaconsEvictionJob,
             scanDuration.scanDurationMillis,
             BEACON_EVICTION_PERIODICITY_MILLIS,
             TimeUnit.MILLISECONDS
@@ -119,15 +138,13 @@ public final class BeaconScanner implements IScanner {
         return ranger;
     }
 
-    private void evictOutdatedBeacons() {
+    private void evictBeacons(@NonNull BeaconEvictionPredicate predicate) {
         final Iterator<Map.Entry<Integer, Beacon>> iterator = nearbyBeacons.entrySet().iterator();
 
-        for (; iterator.hasNext();) {
+        while (iterator.hasNext()) {
             final Beacon inMemoryBeacon = iterator.next().getValue();
-            final long lastSeenAt = requireNonNull(inMemoryBeacon).getLastSeenAtSystemClock();
 
-            if (timeProvider.elapsedRealTimeTimeMillis() - lastSeenAt
-                    >= beaconExpirationDurationMillis) {
+            if (predicate.canBeEvicted(inMemoryBeacon)) {
 
                 iterator.remove();
 
@@ -387,6 +404,8 @@ public final class BeaconScanner implements IScanner {
 
             bleDevice.stopScans(scanCallback);
 
+            evictBeacons(defaultPredicate);
+
             scheduledExecutor.shutdownNow();
 
             try {
@@ -398,12 +417,12 @@ public final class BeaconScanner implements IScanner {
         }
     };
 
-    private final Runnable beaconsEvictionJob = new Runnable() {
+    private final Runnable periodicBeaconsEvictionJob = new Runnable() {
         @Override
         public void run() {
             BeaconLogger.d("Beacons eviction started");
 
-            evictOutdatedBeacons();
+            evictBeacons(outdatedBeaconPredicate);
 
             BeaconLogger.d("Beacons eviction completed");
         }
@@ -505,5 +524,10 @@ public final class BeaconScanner implements IScanner {
         public void onScanFailed(int errorCode) {
             BeaconLogger.d("On scan failed: " + errorCode);
         }
+    }
+
+    private interface BeaconEvictionPredicate {
+
+        boolean canBeEvicted(@NonNull Beacon beacon);
     }
 }
