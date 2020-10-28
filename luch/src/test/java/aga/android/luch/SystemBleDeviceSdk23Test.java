@@ -6,7 +6,6 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.pm.PackageManager;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
