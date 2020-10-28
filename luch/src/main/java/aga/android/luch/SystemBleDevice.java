@@ -84,14 +84,6 @@ class SystemBleDevice implements IBleDevice {
     @Override
     public void stopScans(@NonNull ScanCallback scanCallback) {
         try {
-            if (!bluetoothAdapter.isEnabled()) {
-                BeaconLogger.e(
-                    "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely "
-                        + "the scans weren't started either (check if Bluetooth is turned on)"
-                );
-                return;
-            }
-
             final BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
 
             if (bleScanner == null) {
