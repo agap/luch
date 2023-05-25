@@ -20,6 +20,3 @@ jobs:
 
     - name: Run all registered code quality checks (Lint, Checkstyle, tests and JaCoCo)
       run: ./gradlew luch:check
-
-    - name: Upload code coverage reports to codecov
-      uses: codecov/codecov-action@v1
