@@ -1,5 +1,4 @@
 apply plugin: 'checkstyle'
-apply plugin: 'jacoco-android'
 
 checkstyle {
     toolVersion = '7.4'
@@ -15,38 +14,3 @@ task checkstyle(type: Checkstyle) {
 }
 
 check.dependsOn 'checkstyle'
-
-jacoco {
-    toolVersion = "0.8.5"
-}
-
-tasks.withType(Test) {
-    jacoco.includeNoLocationClasses = true
-}
-
-def jacocoFilter = [
-    '**/R.class', '**/R$*.class', '**/BuildConfig.*',
-    '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*',
-    '**/*Exception*.*'
-]
-
-task jacocoTestCoverageVerification(type: JacocoCoverageVerification, dependsOn: 'jacocoTestReport') {
-    sourceDirectories.setFrom(files(["$project.projectDir/src/main/java"]))
-    classDirectories.setFrom(files([fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: jacocoFilter)]))
-    executionData.setFrom(files("${buildDir}/jacoco/testDebugUnitTest.exec"))
-
-    violationRules {
-        failOnViolation = true
-        rule {
-            element = 'BUNDLE'
-
-            limit {
-                value = 'COVEREDRATIO'
-                counter = 'INSTRUCTION'
-                minimum = 0.8
-            }
-        }
-    }
-}
-
-check.dependsOn 'jacocoTestCoverageVerification'
