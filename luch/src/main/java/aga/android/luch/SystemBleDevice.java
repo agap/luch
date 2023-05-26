@@ -1,5 +1,7 @@
 package aga.android.luch;
 
+import static aga.android.luch.Permissions.checkBluetoothScanPermission;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -50,8 +52,8 @@ class SystemBleDevice implements IBleDevice {
             // getBluetoothLeScanner() just returns null if Bluetooth is disabled.
             if (!bluetoothAdapter.isEnabled()) {
                 BeaconLogger.e(
-                    "BluetoothAdapter is not enabled, scans will not be started (check if "
-                        + "Bluetooth is turned on)"
+                        "BluetoothAdapter is not enabled, scans will not be started (check if "
+                                + "Bluetooth is turned on)"
                 );
                 return;
             }
@@ -60,19 +62,22 @@ class SystemBleDevice implements IBleDevice {
 
             if (bleScanner == null) {
                 BeaconLogger.e(
-                    "BluetoothLeScanner is missing, scans will not be started "
-                        + "(check if Bluetooth is turned on)"
+                        "BluetoothLeScanner is missing, scans will not be started "
+                                + "(check if Bluetooth is turned on)"
                 );
 
                 return;
             }
 
-            bleScanner
-                .startScan(
-                    scanFilters,
-                    scanSettings,
-                    scanCallback
-                );
+            if (checkBluetoothScanPermission(context)) {
+                // noinspection MissingPermission
+                bleScanner
+                    .startScan(
+                        scanFilters,
+                        scanSettings,
+                        scanCallback
+                    );
+            }
         } catch (SecurityException e) {
             BeaconLogger.e(
                 "Can't start the BLE scans since it results in SecurityException (check if the "
@@ -104,7 +109,10 @@ class SystemBleDevice implements IBleDevice {
                 return;
             }
 
-            bleScanner.stopScan(scanCallback);
+            if (checkBluetoothScanPermission(context)) {
+                // noinspection MissingPermission
+                bleScanner.stopScan(scanCallback);
+            }
         } catch (SecurityException e) {
             BeaconLogger.e(
                 "Can't stop the BLE scans since it results in SecurityException (check if the "
