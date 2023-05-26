@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +36,7 @@ public final class BeaconScanner implements IScanner {
     private static final long BEACON_EVICTION_PERIODICITY_MILLIS = 1_000;
 
     @NonNull
-    private IBleDevice bleDevice;
+    private final IBleDevice bleDevice;
 
     @NonNull
     private final BeaconScanCallback scanCallback = new BeaconScanCallback();
@@ -517,7 +518,18 @@ public final class BeaconScanner implements IScanner {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            scheduledExecutor.submit(new BeaconHandlerJob(result));
+            try {
+                scheduledExecutor.submit(new BeaconHandlerJob(result));
+            } catch (RejectedExecutionException e) {
+                // It's actually somewhat possible to get this exception here since attempts
+                // to call ScheduledExecutor#shutdownNow does not provide guarantees that all
+                // scheduled / submitted jobs will be cancelled. It's possible that there will be
+                // some jobs running _now_, when the executor gets shut down, so, if any of these
+                // jobs try to [re]schedule some extra work, they will do so on an already
+                // stopped executor (which is what we're seeing in some crash reports)
+                // Long story short - let's catch and ignore; new executor will be created later
+                // anyway, when we restart scans
+            }
         }
 
         @Override
