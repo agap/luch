@@ -9,9 +9,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
+
+import java.util.List;
 
 class SystemBleDevice implements IBleDevice {
 
@@ -46,8 +46,8 @@ class SystemBleDevice implements IBleDevice {
         try {
             if (!bluetoothAdapter.isEnabled()) {
                 BeaconLogger.e(
-                    "BluetoothAdapter is not enabled, scans will not be started (check if "
-                        + "Bluetooth is turned on)"
+                        "BluetoothAdapter is not enabled, scans will not be started (check if "
+                                + "Bluetooth is turned on)"
                 );
                 return;
             }
@@ -56,8 +56,8 @@ class SystemBleDevice implements IBleDevice {
 
             if (bleScanner == null) {
                 BeaconLogger.e(
-                    "BluetoothLeScanner is missing, scans will not be started "
-                        + "(check if Bluetooth is turned on)"
+                        "BluetoothLeScanner is missing, scans will not be started "
+                                + "(check if Bluetooth is turned on)"
                 );
 
                 return;

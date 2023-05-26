@@ -16,7 +16,6 @@ import static org.junit.Assert.assertFalse;
 public class UuidFieldConverterTest {
 
     private final UuidFieldConverter converter = new UuidFieldConverter();
-
     @Test(expected = Exception.class)
     public void testNotHavingEnoughDataToParseThrowsBeaconParseException() {
 

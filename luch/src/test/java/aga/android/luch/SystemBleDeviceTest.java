@@ -19,8 +19,8 @@ import java.util.List;
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
@@ -34,7 +34,7 @@ public class SystemBleDeviceTest {
 
     private final ScanSettings scanSettings = new ScanSettings.Builder().build();
 
-    private List<ScanFilter> scanFilters = Collections.emptyList();
+    private final List<ScanFilter> scanFilters = Collections.emptyList();
 
     private final ScanCallback scanCallback = new ScanCallback() {
         @Override
@@ -150,7 +150,7 @@ public class SystemBleDeviceTest {
         device.startScans(scanCallback);
 
         // then
-        verifyZeroInteractions(scanner);
+        verifyNoInteractions(scanner);
     }
 
     @Test

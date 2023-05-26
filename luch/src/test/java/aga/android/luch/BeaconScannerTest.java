@@ -1,8 +1,29 @@
 package aga.android.luch;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
+import static org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.UUID.fromString;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static aga.android.luch.ScanDuration.preciseDuration;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
+import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
+
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.test.core.app.ApplicationProvider;
 
 import org.hamcrest.Matchers;
 import org.jmock.lib.concurrent.DeterministicScheduler;
@@ -21,25 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import aga.android.luch.ITimeProvider.TestTimeProvider;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.test.core.app.ApplicationProvider;
-
-import static aga.android.luch.ScanDuration.preciseDuration;
-import static aga.android.luch.parsers.BeaconParserTestHelpers.createAltBeaconScanResult;
-import static aga.android.luch.parsers.BeaconParserTestHelpers.getBluetoothDevice;
-import static edu.emory.mathcs.backport.java.util.Collections.emptySet;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
-import static java.util.UUID.fromString;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 21, manifest = Config.NONE)
@@ -143,6 +145,8 @@ public class BeaconScannerTest {
         advanceTimeBy(10);
         scanner.stop();
 
+        runUiThreadTasksIncludingDelayedTasks();
+
         // then
         assertEquals(
             singleton(
@@ -191,6 +195,8 @@ public class BeaconScannerTest {
         bleDevice.transmitScanResult(scanResult);
         advanceTimeBy(20);
 
+        runUiThreadTasksIncludingDelayedTasks();
+
         // then
         // Stage 1 - beacon is delivered
         assertEquals(
@@ -217,6 +223,8 @@ public class BeaconScannerTest {
 
         // when
         advanceTimeBy(4_000);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         // then
         // Stage 3 - the beacon is evicted, since the elapsed time is 11 seconds, which is
@@ -252,7 +260,6 @@ public class BeaconScannerTest {
             .setScanTasksExecutor(executorProvider)
             .build();
 
-
         final ScanResult scanResult = getScanResult();
 
         // when
@@ -261,6 +268,8 @@ public class BeaconScannerTest {
         advanceTimeBy(10);
         bleDevice.transmitScanResult(scanResult);
         advanceTimeBy(20);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         // then
         // Stage 1 - beacon is delivered
@@ -278,6 +287,8 @@ public class BeaconScannerTest {
         // when
         scanner.stop();
         advanceTimeBy(10);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         // then
         // Stage 2 - beacons are removed
@@ -320,6 +331,8 @@ public class BeaconScannerTest {
         bleDevice.transmitScanResult(scanResult);
         advanceTimeBy(10);
 
+        runUiThreadTasksIncludingDelayedTasks();
+
         // then
         // Stage 1 - beacon is delivered
         assertEquals(
@@ -338,6 +351,8 @@ public class BeaconScannerTest {
         bleDevice.transmitScanResult(scanResult);
         advanceTimeBy(10);
 
+        runUiThreadTasksIncludingDelayedTasks();
+
         // then
         // Stage 2 - the beacon was not redelivered again as it's the same beacon.
         assertThat(
@@ -347,6 +362,8 @@ public class BeaconScannerTest {
 
         // when
         advanceTimeBy(11_000);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         // then
         // Stage 3 - the beacon is evicted, since it was seen at 7_020 millis,
@@ -383,6 +400,8 @@ public class BeaconScannerTest {
         bleDevice.transmitScanResult(scanResult);
 
         advanceTimeBy(1_000);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         final Beacon initialBeacon = beaconListener.nearbyBeacons.iterator().next();
         final long initialTimestamp = initialBeacon.getLastSeenAtSystemClock();
@@ -476,6 +495,8 @@ public class BeaconScannerTest {
         advanceTimeBy(100);
         bleDevice.transmitScanResult(getScanResult((byte) -90));
         advanceTimeBy(100);
+
+        runUiThreadTasksIncludingDelayedTasks();
 
         // then
         // Stage 1 - Ranger has RSSI readings, hence it's running distance calculation
