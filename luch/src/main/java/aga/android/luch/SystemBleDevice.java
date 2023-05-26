@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 
@@ -45,11 +46,6 @@ class SystemBleDevice implements IBleDevice {
         }
 
         try {
-            // On Android 5.0 the behaviour of BluetoothAdapter/BluetoothLeScanner is different
-            // from subsequent releases - BluetoothAdapter.getBluetoothLeScanner() returns
-            // non-nullable reference even if Bluetooth is disabled, but an attempt to call
-            // startScan/stopScan on it raises an exception. On later versions,
-            // getBluetoothLeScanner() just returns null if Bluetooth is disabled.
             if (!bluetoothAdapter.isEnabled()) {
                 BeaconLogger.e(
                         "BluetoothAdapter is not enabled, scans will not be started (check if "
@@ -89,7 +85,8 @@ class SystemBleDevice implements IBleDevice {
     @Override
     public void stopScans(@NonNull ScanCallback scanCallback) {
         try {
-            if (!bluetoothAdapter.isEnabled()) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP
+                    && !bluetoothAdapter.isEnabled()) {
                 BeaconLogger.e(
                     "Can't stop the BLE scans since BluetoothAdapter is not enabled, most likely "
                         + "the scans weren't started either (check if Bluetooth is turned on)"

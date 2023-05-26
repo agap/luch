@@ -15,4 +15,6 @@ public interface IScanner {
         anyOf = {permission.ACCESS_FINE_LOCATION, permission.ACCESS_COARSE_LOCATION}
     )
     void stop();
+
+    Ranger getRanger();
 }

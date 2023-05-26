@@ -152,7 +152,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -203,7 +203,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -230,6 +230,66 @@ public class BeaconScannerTest {
         // greater than beacon's validity
         assertEquals(
             Collections.<Beacon>emptySet(),
+            beaconListener.nearbyBeacons
+        );
+    }
+
+    @Test
+    public void testScannerRemovesAllBeaconsOnStop()
+        throws InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException {
+        // given
+        final long beaconExpirationDurationSeconds = 10;
+        final long scanRestDurationSeconds = 6;
+
+        final ScanDuration scanDuration = preciseDuration(
+            SECONDS.toMillis(scanRestDurationSeconds),
+            SECONDS.toMillis(scanRestDurationSeconds)
+        );
+
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconBatchListener(beaconListener)
+            .setBeaconExpirationDuration(beaconExpirationDurationSeconds)
+            .setScanDuration(scanDuration)
+            .setTimeProvider(timeProvider)
+            .setScanTasksExecutor(executorProvider)
+            .build();
+
+
+        final ScanResult scanResult = getScanResult();
+
+        // when
+        scanner.start();
+
+        advanceTimeBy(10);
+        bleDevice.transmitScanResult(scanResult);
+        advanceTimeBy(20);
+
+        // then
+        // Stage 1 - beacon is delivered
+        assertEquals(
+            singleton(
+                new Beacon(
+                    bluetoothAddress,
+                    asList(48812, fromString(proximityUuid), major, minor, txPower, data),
+                    txPower
+                )
+            ),
+            beaconListener.nearbyBeacons
+        );
+
+        // when
+        scanner.stop();
+        advanceTimeBy(10);
+
+        // then
+        // Stage 2 - beacons are removed
+        assertEquals(
+            emptySet(),
             beaconListener.nearbyBeacons
         );
     }
@@ -276,7 +336,7 @@ public class BeaconScannerTest {
                 new Beacon(
                     bluetoothAddress,
                     asList(48812, fromString(proximityUuid), major, minor, txPower, data),
-                    getCalculator(4)
+                    txPower
                 )
             ),
             beaconListener.nearbyBeacons
@@ -396,7 +456,68 @@ public class BeaconScannerTest {
         );
     }
 
+    @Test
+    public void testRangingMode()
+        throws NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException,
+            InvocationTargetException {
+
+        // given
+        final BeaconScanner scanner = new BeaconScanner
+            .Builder(ApplicationProvider.getApplicationContext())
+            .setBleDevice(bleDevice)
+            .setBeaconExpirationDuration(15)
+            .setBeaconBatchListener(beaconListener)
+            .setScanTasksExecutor(executorProvider)
+            .setTimeProvider(timeProvider)
+            .setRangingEnabled()
+            .build();
+
+        final Ranger ranger = scanner.getRanger();
+
+        // when
+        scanner.start();
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -95));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -97));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -99));
+
+        advanceTimeBy(100);
+        bleDevice.transmitScanResult(getScanResult((byte) -90));
+        advanceTimeBy(100);
+
+        // then
+        // Stage 1 - Ranger has RSSI readings, hence it's running distance calculation
+        // over the smoothed RSSI value
+        final Beacon beacon = beaconListener.nearbyBeacons.iterator().next();
+        assertEquals(0.3162, Objects.requireNonNull(ranger).calculateDistance(beacon), 0.0001);
+
+        // when
+        advanceTimeBy(15_000);
+
+        // then
+        // Stage 2 - 15 seconds have passed, RSSI values were cleaned up, distance calculation
+        // is done over the latest known RSSI value
+        assertEquals(0.1778, ranger.calculateDistance(beacon), 0.0001);
+
+        scanner.stop();
+    }
+
     private ScanResult getScanResult()
+        throws NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException,
+            InvocationTargetException {
+        return getScanResult(rssi);
+    }
+
+    private ScanResult getScanResult(byte rssi)
         throws InvocationTargetException,
             NoSuchMethodException,
             InstantiationException,
@@ -468,6 +589,11 @@ public class BeaconScannerTest {
         @Override
         public void onBeaconEntered(@NonNull Beacon beacon) {
             nearbyBeacons.add(beacon);
+        }
+
+        @Override
+        public void onBeaconUpdated(@NonNull Beacon beacon) {
+
         }
 
         @Override

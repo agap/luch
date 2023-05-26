@@ -28,8 +28,8 @@ implementation 'aga.android:luch:(insert latest version)'
 ## Obtain an instance of the BeaconScanner
 
 ```kotlin
-val beaconScanner = BeaconScanner.Builder()
-    .setBeaconListener { beacons: Set<Beacon> ->
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .build()
@@ -58,7 +58,7 @@ If you want to monitor specific beacons, you can provide a list of regions to lo
 ```kotlin
 val regions = listOf(Region.Builder().build())
 
-val beaconScanner = BeaconScanner.Builder()
+val beaconScanner = BeaconScanner.Builder(this)
     .setRegions(regions)
     .build()
 ```
@@ -111,9 +111,9 @@ val beaconLayout = "<beacon-layout>" // search the Internet to find the layout s
 
 val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
 
-val beaconScanner = BeaconScanner.Builder()
+val beaconScanner = BeaconScanner.Builder(this)
     .setBeaconParser(beaconParser)
-    .setBeaconListener { beacons: Set<Beacon> ->
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
         // do something with your beacons here
     }
     .build()
@@ -123,6 +123,47 @@ The format of beacon layouts is somewhat similar to the one supported by [AltBea
 
 1. The only field prefixes supported at the moment are 'm', 'i', 'p' and 'd'.
 2. Little-endian fields are not supported yet, as variable-length fields.
+
+## Distance calculation
+
+You can range your beacons if you want to. To do that, build your `BeaconScanner` with ranging support:
+
+```kotlin
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
+        // do something with your beacons here
+    }
+    .setRangingEnabled()
+    .build()
+
+beaconScanner.start()
+```
+
+Once you start beacon scans, you can access the scanner's `Ranger` object. This object does the distance calculation for a detected beacon:
+
+```kotlin
+val ranger = beaconScanner.getRanger()
+
+val distance = ranger.calculateDistance(beacon)
+```
+
+The ranging works only for the beacons that provide the TxPower value in their advertisement packages (AltBeacon is one of them). Another component of distance calculation is RSSI value, which changes over time.
+Due to the nature of BLE, RSSI values can suddenly change. To smooth these sudden changes, Luch uses the RSSI filtering technique. The default filter is [running average](https://en.wikipedia.org/wiki/Moving_average) filter, but you can replace it with [ARMA](https://en.wikipedia.org/wiki/Autoregressive%E2%80%93moving-average_model) (autoregressive–moving-average filter):
+
+```kotlin
+val beaconScanner = BeaconScanner.Builder(this)
+    .setBeaconBatchListener { beacons: Collection<Beacon> ->
+        // do something with your beacons here
+    }
+    .setRangingEnabled(
+        ArmaFilter.Builder()
+    )
+    .build()
+
+beaconScanner.start()
+```
+
+You can provide your own filters by extending the `RssiFilter` class.
 
 ## Logs
 
@@ -154,5 +195,5 @@ So there will be no background mode support unless I decide it's possible to do 
 
 ## What's the point of this library then?
 
-1. I want something simple, without background mode, beacon caching, ranging, and all that stuff. The more code we put into production, the less stable the result becomes.
+1. I want something simple, without background mode, beacon caching, and all that stuff. The more code we put into production, the less stable the result becomes.
 2. Just have some fun. :)

@@ -3,9 +3,8 @@ package aga.android.luch.parsers;
 import java.util.ArrayList;
 import java.util.List;
 
-import aga.android.luch.distance.AbstractDistanceCalculator;
-import aga.android.luch.distance.DistanceCalculatorFactory;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -17,11 +16,11 @@ public final class BeaconParserFactory {
 
     private static final List<String> SUPPORTED_PREFIXES = asList("m", "i", "p", "d");
 
-    private static final List<? extends IFieldConverter> SUPPORTED_CONVERTERS = asList(
+    private static final IFieldConverter<?>[] SUPPORTED_CONVERTERS = new IFieldConverter[] {
         new SingleByteFieldConverter(),
         new IntegerFieldConverter(),
         new UuidFieldConverter()
-    );
+    };
 
     private BeaconParserFactory() {
         // no instances please
@@ -41,20 +40,19 @@ public final class BeaconParserFactory {
     public static IBeaconParser createFromLayout(@NonNull String beaconLayout,
                                                  int manufacturerId) {
 
-        final List<IFieldConverter> converters = new ArrayList<>();
+        final List<IFieldConverter<?>> converters = new ArrayList<>();
 
         final String[] tokens = beaconLayout.split(",");
 
         int beaconTypeFieldPosition = -1;
+        int beaconTxPowerFieldPosition = -1;
 
         Object beaconType = null;
-
-        AbstractDistanceCalculator distanceCalculator = null;
 
         for (int i = 0; i < tokens.length; i++) {
             final String token = tokens[i];
             final String fieldPrefix = getFieldPrefix(token);
-            final IFieldConverter converter = getSuitableConverter(token);
+            final IFieldConverter<?> converter = getSuitableConverter(token);
 
             if (converter == null) {
                 throw new IllegalArgumentException(
@@ -79,7 +77,7 @@ public final class BeaconParserFactory {
 
                 beaconTypeFieldPosition = converters.size() - 1;
             } else if (fieldPrefix.equals("p")) {
-                distanceCalculator = DistanceCalculatorFactory.getCalculator(i);
+                beaconTxPowerFieldPosition = i;
             }
         }
 
@@ -91,10 +89,10 @@ public final class BeaconParserFactory {
 
         return new BeaconParser(
             converters,
-            distanceCalculator,
             beaconTypeFieldPosition,
             manufacturerId,
-            beaconType
+            beaconType,
+            beaconTxPowerFieldPosition
         );
     }
 
@@ -110,7 +108,8 @@ public final class BeaconParserFactory {
         return fieldPrefix;
     }
 
-    private static IFieldConverter getSuitableConverter(String token) {
+    @Nullable
+    private static IFieldConverter<?> getSuitableConverter(String token) {
 
         final String[] fieldRange;
         final int length;
@@ -131,15 +130,12 @@ public final class BeaconParserFactory {
             );
         }
 
-        IFieldConverter suitableConverter = null;
-
-        for (IFieldConverter converter : SUPPORTED_CONVERTERS) {
+        for (IFieldConverter<?> converter : SUPPORTED_CONVERTERS) {
             if (converter.canParse(length)) {
-                suitableConverter = converter;
-                break;
+                return converter;
             }
         }
 
-        return suitableConverter;
+        return null;
     }
 }
